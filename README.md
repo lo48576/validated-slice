@@ -5,6 +5,11 @@
 [![Documentation](https://docs.rs/validated-slice/badge.svg)](https://docs.rs/validated-slice)
 ![Minimum rustc version: 1.37](https://img.shields.io/badge/rustc-1.37+-lightgray.svg)
 
+Helper macros to implement std traits for custom validated slice types in Rust.
+
+See [`tests/ascii_str.rs`](tests/ascii_str.rs) and [`tests/plain_str.rs`](tests/plain_str.rs) for
+example.
+These examples defines custom string types and implement basic std traits for them by this crate.
 
 ## License
 
