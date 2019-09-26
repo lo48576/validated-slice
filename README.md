@@ -11,6 +11,33 @@ See [`tests/ascii_str.rs`](tests/ascii_str.rs) and [`tests/plain_str.rs`](tests/
 example.
 These examples defines custom string types and implement basic std traits for them by this crate.
 
+## Custom slice
+
+To define opaque type aliases for data with specific characteristics, you may want to define custom slice types and vector types.
+For example:
+
+* String with only ASCII characters.
+* String which is a valid URI.
+* Escaped HTML and unescaped HTML.
+* String with case-insensitive comparison by `PartialEq` and `PartialOrd`).
+* Non-empty array.
+* Sorted array.
+
+However, primitive types `[T]` and `str` have many trait impls, and custom array types might be non-user-friendly without such trait impls.
+(For example, if you want ASCII string `&AsciiStr`, you may also want `Default for &AsciiStr`, `std::convert::TryFrom<&str> for &AsciiStr>`, `PartialEq<str> for &AsciiStr`, `PartialOrd<AsciiStr> for Cow<'_, AsciiStr>`, `std::fmt::Display for `AsciiStr`, etc.)
+
+`validated-slice` helps users to automatically implement these traits common for array and string with less boilerplates.
+
+## Current status
+
+This crate is at an early stage, and experimental.
+Syntax and features may change breakingly.
+
+This crate follows semver, so you can check crate version to know breaking change.
+
+### TODO
+For desired features without detailed ideas, see [TODO.md](TODO.md).
+
 ## License
 
 Licensed under either of
