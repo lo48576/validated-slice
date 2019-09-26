@@ -130,6 +130,8 @@
 /// * `std::ops`
 ///     + `{ Deref<Target = {SliceCustom}> };`
 ///     + `{ DerefMut<Target = {SliceCustom}> };`
+/// * `std::str`
+///     + `{ FromStr };`
 ///
 /// [`impl_cmp_for_owned_slice!`]: macro.impl_cmp_for_owned_slice.html
 #[macro_export]
@@ -571,6 +573,57 @@ macro_rules! impl_std_traits_for_owned_slice {
                 }
             }
         }
+    };
+
+    // std::str::FromStr
+    (
+        @impl; ($spec:ty, $custom:ty, $inner:ty, $error:ty,
+            $slice_spec:ty, $slice_custom:ty, $slice_inner:ty, $slice_error:ty);
+        rest=[ FromStr ];
+    ) => {
+        impl std::str::FromStr for $custom {
+            type Err = $slice_error;
+
+            fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
+                // Currently, `$slice_inner` should be `str` for simplicity.
+                // This restriction will be loosened in future.
+                struct EnsureTraitBound
+                where
+                    $slice_spec: $crate::SliceSpec<Inner = str>, {}
+
+                <$slice_spec as $crate::SliceSpec>::validate(s)?;
+                let inner = <$inner>::from(s);
+                Ok(unsafe {
+                    // This is safe only when all of the conditions below are met:
+                    //
+                    // * `$spec::validate(s)` returns `Ok(())`.
+                    //     + This is ensured by the leading `validate()?` call.
+                    // * Safety condition for `<$spec as $crate::OwnedSliceSpec>` is satisfied.
+                    <$spec as $crate::OwnedSliceSpec>::from_inner_unchecked(inner)
+                })
+            }
+        }
+        /*
+        impl<'a> std::convert::TryFrom<&'a $slice_inner> for $custom
+        where
+            $inner: From<&'a $slice_inner>,
+        {
+            type Error = $slice_error;
+
+            fn try_from(s: &'a $slice_inner) -> std::result::Result<Self, Self::Error> {
+                <$slice_spec as $crate::SliceSpec>::validate(s)?;
+                let inner = <$inner>::from(s);
+                Ok(unsafe {
+                    // This is safe only when all of the conditions below are met:
+                    //
+                    // * `$spec::validate(s)` returns `Ok(())`.
+                    //     + This is ensured by the leading `validate()?` call.
+                    // * Safety condition for `<$spec as $crate::OwnedSliceSpec>` is satisfied.
+                    <$spec as $crate::OwnedSliceSpec>::from_inner_unchecked(inner)
+                })
+            }
+        }
+        */
     };
 
     // Helpers.

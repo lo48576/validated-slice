@@ -200,6 +200,8 @@ validated_slice::impl_std_traits_for_owned_slice! {
     { Deref<Target = {SliceCustom}> };
     // DerefMut<Target = PlainStr> for PlainBoxStr
     { DerefMut<Target = {SliceCustom}> };
+    // FromStr<Err = std::convert::Infallible> for PlainBoxStr
+    { FromStr };
 }
 
 validated_slice::impl_cmp_for_owned_slice! {
@@ -322,6 +324,8 @@ validated_slice::impl_std_traits_for_owned_slice! {
     { Deref<Target = {SliceCustom}> };
     // DerefMut<Target = PlainStr> for PlainString
     { DerefMut<Target = {SliceCustom}> };
+    // FromStr<Err = std::convert::Infallible> for PlainString
+    { FromStr };
 }
 
 validated_slice::impl_cmp_for_owned_slice! {
@@ -566,6 +570,13 @@ mod plain_box_str {
         PlainBoxStr: std::ops::DerefMut<Target = PlainStr>,
     {
     }
+
+    #[test]
+    fn from_str()
+    where
+        PlainBoxStr: std::str::FromStr<Err = std::convert::Infallible>,
+    {
+    }
 }
 
 #[cfg(test)]
@@ -703,6 +714,13 @@ mod plain_string {
     fn deref_mut()
     where
         PlainString: std::ops::DerefMut<Target = PlainStr>,
+    {
+    }
+
+    #[test]
+    fn from_str()
+    where
+        PlainString: std::str::FromStr<Err = std::convert::Infallible>,
     {
     }
 }
