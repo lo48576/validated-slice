@@ -204,6 +204,8 @@ validated_slice::impl_std_traits_for_owned_slice! {
     { Deref<Target = {SliceCustom}> };
     // DerefMut<Target = AsciiStr> for AsciiBoxStr
     { DerefMut<Target = {SliceCustom}> };
+    // FromStr<Err = AsciiError> for AsciiBoxStr
+    { FromStr };
 }
 
 validated_slice::impl_cmp_for_owned_slice! {
@@ -326,6 +328,8 @@ validated_slice::impl_std_traits_for_owned_slice! {
     { Deref<Target = {SliceCustom}> };
     // DerefMut<Target = AsciiStr> for AsciiString
     { DerefMut<Target = {SliceCustom}> };
+    // FromStr<Err = AsciiError> for AsciiString
+    { FromStr };
 }
 
 validated_slice::impl_cmp_for_owned_slice! {
@@ -577,6 +581,13 @@ mod ascii_box_str {
         AsciiBoxStr: std::ops::DerefMut<Target = AsciiStr>,
     {
     }
+
+    #[test]
+    fn from_str()
+    where
+        AsciiBoxStr: std::str::FromStr<Err = AsciiError>,
+    {
+    }
 }
 
 #[cfg(test)]
@@ -722,6 +733,13 @@ mod ascii_string {
     fn deref_mut()
     where
         AsciiString: std::ops::DerefMut<Target = AsciiStr>,
+    {
+    }
+
+    #[test]
+    fn from_str()
+    where
+        AsciiString: std::str::FromStr<Err = AsciiError>,
     {
     }
 }
