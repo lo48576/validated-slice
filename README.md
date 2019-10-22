@@ -35,6 +35,10 @@ Syntax and features may change breakingly.
 
 This crate follows semver, so you can check crate version to know breaking change.
 
+### Features
+* nostd support
+    + See docs of the macros for detail.
+
 ### TODO
 For desired features without detailed ideas, see [TODO.md](TODO.md).
 

@@ -2,6 +2,8 @@
 
 /// Implements some methods of [`SliceSpec`] trait automatically.
 ///
+/// This macro can be safely used in nostd environment.
+///
 /// # Examples
 ///
 /// ```
@@ -124,6 +126,15 @@ macro_rules! impl_slice_spec_methods {
 ///
 /// ```ignore
 /// validated_slice::impl_std_traits_for_slice! {
+///     // `Std` is omissible.
+///     Std {
+///         // Module identifier of `core` crate.
+///         // Default is `std`.
+///         core: core,
+///         // Module identifier of `alloc` crate.
+///         // Default is `std`.
+///         alloc: alloc,
+///     };
 ///     Spec {
 ///         spec: MyStrSpec,
 ///         custom: MyStr,
@@ -137,6 +148,32 @@ macro_rules! impl_slice_spec_methods {
 ///     /* ... and more traits you want! */
 /// }
 /// ```
+///
+/// ## Core and alloc
+///
+/// For `no_std` use, the macro uses custom `core` and `alloc` crate if given.
+/// You can support both nostd and non-nostd environment as below:
+///
+/// ```ignore
+/// // Use `std` when available.
+/// #[cfg(feature = "std")]
+/// use alloc as std;
+/// // Use external `alloc` crate when nostd.
+/// #[cfg(not(feature = "std"))]
+/// use alloc;
+///
+/// validated_slice::impl_std_traits_for_slice! {
+///     Std {
+///         core: core,
+///         alloc: alloc,
+///     };
+///     Spec { /* ... */ };
+///     /* ... */
+/// }
+/// ```
+///
+/// When you don't need `alloc` crate on nostd build, value of `alloc` field is not used.
+/// Simply specify `alloc: alloc,` or something.
 ///
 /// ## Type names
 ///
@@ -198,7 +235,28 @@ macro_rules! impl_std_traits_for_slice {
     ) => {
         $(
             $crate::impl_std_traits_for_slice! {
-                @impl; ($spec, $custom, $inner, $error);
+                @impl; ({std, std}, $spec, $custom, $inner, $error);
+                rest=[$($rest)*];
+            }
+        )*
+    };
+
+    (
+        Std {
+            core: $core:ident,
+            alloc: $alloc:ident,
+        };
+        Spec {
+            spec: $spec:ty,
+            custom: $custom:ty,
+            inner: $inner:ty,
+            error: $error:ty,
+        };
+        $({$($rest:tt)*});* $(;)?
+    ) => {
+        $(
+            $crate::impl_std_traits_for_slice! {
+                @impl; ({$core, $alloc}, $spec, $custom, $inner, $error);
                 rest=[$($rest)*];
             }
         )*
@@ -206,10 +264,10 @@ macro_rules! impl_std_traits_for_slice {
 
     // std::convert::AsMut
     (
-        @impl; ($spec:ty, $custom:ty, $inner:ty, $error:ty);
+        @impl; ({$core:ident, $alloc:ident}, $spec:ty, $custom:ty, $inner:ty, $error:ty);
         rest=[ AsMut<{Custom}> ];
     ) => {
-        impl std::convert::AsMut<$custom> for $custom {
+        impl $core::convert::AsMut<$custom> for $custom {
             #[inline]
             fn as_mut(&mut self) -> &mut $custom {
                 self
@@ -217,10 +275,10 @@ macro_rules! impl_std_traits_for_slice {
         }
     };
     (
-        @impl; ($spec:ty, $custom:ty, $inner:ty, $error:ty);
+        @impl; ({$core:ident, $alloc:ident}, $spec:ty, $custom:ty, $inner:ty, $error:ty);
         rest=[ AsMut<$param:ty> ];
     ) => {
-        impl std::convert::AsMut<$param> for $custom
+        impl $core::convert::AsMut<$param> for $custom
         where
             $inner: AsMut<$param>,
         {
@@ -233,10 +291,10 @@ macro_rules! impl_std_traits_for_slice {
 
     // std::convert::AsRef
     (
-        @impl; ($spec:ty, $custom:ty, $inner:ty, $error:ty);
+        @impl; ({$core:ident, $alloc:ident}, $spec:ty, $custom:ty, $inner:ty, $error:ty);
         rest=[ AsRef<{Custom}> ];
     ) => {
-        impl std::convert::AsRef<$custom> for $custom {
+        impl $core::convert::AsRef<$custom> for $custom {
             #[inline]
             fn as_ref(&self) -> &$custom {
                 self
@@ -244,10 +302,10 @@ macro_rules! impl_std_traits_for_slice {
         }
     };
     (
-        @impl; ($spec:ty, $custom:ty, $inner:ty, $error:ty);
+        @impl; ({$core:ident, $alloc:ident}, $spec:ty, $custom:ty, $inner:ty, $error:ty);
         rest=[ AsRef<{Custom}> for Cow<{Custom}> ];
     ) => {
-        impl<'a> std::convert::AsRef<$custom> for std::borrow::Cow<'a, $custom> {
+        impl<'a> $core::convert::AsRef<$custom> for $alloc::borrow::Cow<'a, $custom> {
             #[inline]
             fn as_ref(&self) -> &$custom {
                 &**self
@@ -255,10 +313,10 @@ macro_rules! impl_std_traits_for_slice {
         }
     };
     (
-        @impl; ($spec:ty, $custom:ty, $inner:ty, $error:ty);
+        @impl; ({$core:ident, $alloc:ident}, $spec:ty, $custom:ty, $inner:ty, $error:ty);
         rest=[ AsRef<$param:ty> ];
     ) => {
-        impl std::convert::AsRef<$param> for $custom
+        impl $core::convert::AsRef<$param> for $custom
         where
             $inner: AsRef<$param>,
         {
@@ -269,10 +327,10 @@ macro_rules! impl_std_traits_for_slice {
         }
     };
     (
-        @impl; ($spec:ty, $custom:ty, $inner:ty, $error:ty);
+        @impl; ({$core:ident, $alloc:ident}, $spec:ty, $custom:ty, $inner:ty, $error:ty);
         rest=[ AsRef<$param:ty> for Cow<{Custom}> ];
     ) => {
-        impl<'a> std::convert::AsRef<$param> for std::borrow::Cow<'a, $custom>
+        impl<'a> $core::convert::AsRef<$param> for $alloc::borrow::Cow<'a, $custom>
         where
             $inner: AsRef<$param>,
         {
@@ -285,10 +343,10 @@ macro_rules! impl_std_traits_for_slice {
 
     // std::convert::From
     (
-        @impl; ($spec:ty, $custom:ty, $inner:ty, $error:ty);
+        @impl; ({$core:ident, $alloc:ident}, $spec:ty, $custom:ty, $inner:ty, $error:ty);
         rest=[ From<&{Inner}> for &{Custom} ];
     ) => {
-        impl<'a> std::convert::From<&'a $inner> for &'a $custom {
+        impl<'a> $core::convert::From<&'a $inner> for &'a $custom {
             fn from(s: &'a $inner) -> Self {
                 assert!(
                     <$spec as $crate::SliceSpec>::validate(s).is_ok(),
@@ -307,10 +365,10 @@ macro_rules! impl_std_traits_for_slice {
         }
     };
     (
-        @impl; ($spec:ty, $custom:ty, $inner:ty, $error:ty);
+        @impl; ({$core:ident, $alloc:ident}, $spec:ty, $custom:ty, $inner:ty, $error:ty);
         rest=[ From<&mut {Inner}> for &mut {Custom} ];
     ) => {
-        impl<'a> std::convert::From<&'a mut $inner> for &'a mut $custom {
+        impl<'a> $core::convert::From<&'a mut $inner> for &'a mut $custom {
             fn from(s: &'a mut $inner) -> Self {
                 assert!(
                     <$spec as $crate::SliceSpec>::validate(s).is_ok(),
@@ -331,12 +389,12 @@ macro_rules! impl_std_traits_for_slice {
 
     // std::convert::From for smart pointers
     (
-        @impl [smartptr]; ($spec:ty, $custom:ty, $inner:ty, $error:ty);
+        @impl [smartptr]; ({$core:ident, $alloc:ident}, $spec:ty, $custom:ty, $inner:ty, $error:ty);
         rest=[ From<&{Custom}> for $($smartptr:ident)::* <{Custom}> ];
     ) => {
-        impl<'a> std::convert::From<&'a $custom> for $($smartptr)::* <$custom>
+        impl<'a> $core::convert::From<&'a $custom> for $($smartptr)::* <$custom>
         where
-            $($smartptr)::* <$inner>: std::convert::From<&'a $inner>,
+            $($smartptr)::* <$inner>: $core::convert::From<&'a $inner>,
         {
             fn from(s: &'a $custom) -> Self {
                 let inner = <$spec as $crate::SliceSpec>::as_inner(s);
@@ -357,42 +415,42 @@ macro_rules! impl_std_traits_for_slice {
         }
     };
     (
-        @impl; ($spec:ty, $custom:ty, $inner:ty, $error:ty);
+        @impl; ({$core:ident, $alloc:ident}, $spec:ty, $custom:ty, $inner:ty, $error:ty);
         rest=[ From<&{Custom}> for Arc<{Custom}> ];
     ) => {
         $crate::impl_std_traits_for_slice! {
-            @impl [smartptr]; ($spec, $custom, $inner, $error);
-            rest=[ From<&{Custom}> for std::sync::Arc <{Custom}> ];
+            @impl [smartptr]; ({$core, $alloc}, $spec, $custom, $inner, $error);
+            rest=[ From<&{Custom}> for $alloc::sync::Arc <{Custom}> ];
         }
     };
     (
-        @impl; ($spec:ty, $custom:ty, $inner:ty, $error:ty);
+        @impl; ({$core:ident, $alloc:ident}, $spec:ty, $custom:ty, $inner:ty, $error:ty);
         rest=[ From<&{Custom}> for Box<{Custom}> ];
     ) => {
         $crate::impl_std_traits_for_slice! {
-            @impl [smartptr]; ($spec, $custom, $inner, $error);
-            rest=[ From<&{Custom}> for std::boxed::Box <{Custom}> ];
+            @impl [smartptr]; ({$core, $alloc}, $spec, $custom, $inner, $error);
+            rest=[ From<&{Custom}> for $alloc::boxed::Box <{Custom}> ];
         }
     };
     (
-        @impl; ($spec:ty, $custom:ty, $inner:ty, $error:ty);
+        @impl; ({$core:ident, $alloc:ident}, $spec:ty, $custom:ty, $inner:ty, $error:ty);
         rest=[ From<&{Custom}> for Rc<{Custom}> ];
     ) => {
         $crate::impl_std_traits_for_slice! {
-            @impl [smartptr]; ($spec, $custom, $inner, $error);
-            rest=[ From<&{Custom}> for std::rc::Rc <{Custom}> ];
+            @impl [smartptr]; ({$core, $alloc}, $spec, $custom, $inner, $error);
+            rest=[ From<&{Custom}> for $alloc::rc::Rc <{Custom}> ];
         }
     };
 
     // std::convert::TryFrom
     (
-        @impl; ($spec:ty, $custom:ty, $inner:ty, $error:ty);
+        @impl; ({$core:ident, $alloc:ident}, $spec:ty, $custom:ty, $inner:ty, $error:ty);
         rest=[ TryFrom<&{Inner}> for &{Custom} ];
     ) => {
-        impl<'a> std::convert::TryFrom<&'a $inner> for &'a $custom {
+        impl<'a> $core::convert::TryFrom<&'a $inner> for &'a $custom {
             type Error = $error;
 
-            fn try_from(s: &'a $inner) -> std::result::Result<Self, Self::Error> {
+            fn try_from(s: &'a $inner) -> $core::result::Result<Self, Self::Error> {
                 <$spec as $crate::SliceSpec>::validate(s)?;
                 Ok(unsafe {
                     // This is safe only when all of the conditions below are met:
@@ -406,13 +464,13 @@ macro_rules! impl_std_traits_for_slice {
         }
     };
     (
-        @impl; ($spec:ty, $custom:ty, $inner:ty, $error:ty);
+        @impl; ({$core:ident, $alloc:ident}, $spec:ty, $custom:ty, $inner:ty, $error:ty);
         rest=[ TryFrom<&mut {Inner}> for &mut {Custom} ];
     ) => {
-        impl<'a> std::convert::TryFrom<&'a mut $inner> for &'a mut $custom {
+        impl<'a> $core::convert::TryFrom<&'a mut $inner> for &'a mut $custom {
             type Error = $error;
 
-            fn try_from(s: &'a mut $inner) -> std::result::Result<Self, Self::Error> {
+            fn try_from(s: &'a mut $inner) -> $core::result::Result<Self, Self::Error> {
                 <$spec as $crate::SliceSpec>::validate(s)?;
                 Ok(unsafe {
                     // This is safe only when all of the conditions below are met:
@@ -428,15 +486,15 @@ macro_rules! impl_std_traits_for_slice {
 
     // std::default::Default
     (
-        @impl; ($spec:ty, $custom:ty, $inner:ty, $error:ty);
+        @impl; ({$core:ident, $alloc:ident}, $spec:ty, $custom:ty, $inner:ty, $error:ty);
         rest=[ Default for &{Custom} ];
     ) => {
-        impl<'a> std::default::Default for &'a $custom
+        impl<'a> $core::default::Default for &'a $custom
         where
-            &'a $inner: std::default::Default,
+            &'a $inner: $core::default::Default,
         {
             fn default() -> Self {
-                let inner = <&'a $inner as std::default::Default>::default();
+                let inner = <&'a $inner as $core::default::Default>::default();
                 assert!(
                     <$spec as $crate::SliceSpec>::validate(inner).is_ok(),
                     "Attempt to create invalid data: `Default for &{}`",
@@ -454,15 +512,15 @@ macro_rules! impl_std_traits_for_slice {
         }
     };
     (
-        @impl; ($spec:ty, $custom:ty, $inner:ty, $error:ty);
+        @impl; ({$core:ident, $alloc:ident}, $spec:ty, $custom:ty, $inner:ty, $error:ty);
         rest=[ Default for &mut {Custom} ];
     ) => {
-        impl<'a> std::default::Default for &'a mut $custom
+        impl<'a> $core::default::Default for &'a mut $custom
         where
-            &'a mut $inner: std::default::Default,
+            &'a mut $inner: $core::default::Default,
         {
             fn default() -> Self {
-                let inner = <&'a mut $inner as std::default::Default>::default();
+                let inner = <&'a mut $inner as $core::default::Default>::default();
                 assert!(
                     <$spec as $crate::SliceSpec>::validate(inner).is_ok(),
                     "Attempt to create invalid data: `Default for &{}`",
@@ -482,42 +540,42 @@ macro_rules! impl_std_traits_for_slice {
 
     // std::fmt::Debug
     (
-        @impl; ($spec:ty, $custom:ty, $inner:ty, $error:ty);
+        @impl; ({$core:ident, $alloc:ident}, $spec:ty, $custom:ty, $inner:ty, $error:ty);
         rest=[ Debug ];
     ) => {
-        impl std::fmt::Debug for $custom
+        impl $core::fmt::Debug for $custom
         where
-            $inner: std::fmt::Debug,
+            $inner: $core::fmt::Debug,
         {
-            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            fn fmt(&self, f: &mut $core::fmt::Formatter<'_>) -> $core::fmt::Result {
                 let inner = <$spec as $crate::SliceSpec>::as_inner(self);
-                <$inner as std::fmt::Debug>::fmt(inner, f)
+                <$inner as $core::fmt::Debug>::fmt(inner, f)
             }
         }
     };
 
     // std::fmt::Display
     (
-        @impl; ($spec:ty, $custom:ty, $inner:ty, $error:ty);
+        @impl; ({$core:ident, $alloc:ident}, $spec:ty, $custom:ty, $inner:ty, $error:ty);
         rest=[ Display ];
     ) => {
-        impl std::fmt::Display for $custom
+        impl $core::fmt::Display for $custom
         where
-            $inner: std::fmt::Display,
+            $inner: $core::fmt::Display,
         {
-            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            fn fmt(&self, f: &mut $core::fmt::Formatter<'_>) -> $core::fmt::Result {
                 let inner = <$spec as $crate::SliceSpec>::as_inner(self);
-                <$inner as std::fmt::Display>::fmt(inner, f)
+                <$inner as $core::fmt::Display>::fmt(inner, f)
             }
         }
     };
 
     // std::ops::Deref
     (
-        @impl; ($spec:ty, $custom:ty, $inner:ty, $error:ty);
+        @impl; ({$core:ident, $alloc:ident}, $spec:ty, $custom:ty, $inner:ty, $error:ty);
         rest=[ Deref<Target = {Inner}> ];
     ) => {
-        impl std::ops::Deref for $custom {
+        impl $core::ops::Deref for $custom {
             type Target = $inner;
 
             #[inline]
@@ -529,10 +587,10 @@ macro_rules! impl_std_traits_for_slice {
 
     // std::ops::DerefMut
     (
-        @impl; ($spec:ty, $custom:ty, $inner:ty, $error:ty);
+        @impl; ({$core:ident, $alloc:ident}, $spec:ty, $custom:ty, $inner:ty, $error:ty);
         rest=[ DerefMut<Target = {Inner}> ];
     ) => {
-        impl std::ops::DerefMut for $custom {
+        impl $core::ops::DerefMut for $custom {
             #[inline]
             fn deref_mut(&mut self) -> &mut Self::Target {
                 <$spec as $crate::SliceSpec>::as_inner_mut(self)
@@ -542,7 +600,7 @@ macro_rules! impl_std_traits_for_slice {
 
     // Fallback.
     (
-        @impl; ($spec:ty, $custom:ty, $inner:ty, $error:ty);
+        @impl; ({$core:ident, $alloc:ident}, $spec:ty, $custom:ty, $inner:ty, $error:ty);
         rest=[ $($rest:tt)* ];
     ) => {
         compile_error!(concat!("Unsupported target: ", stringify!($($rest)*)));
@@ -557,6 +615,15 @@ macro_rules! impl_std_traits_for_slice {
 ///
 /// ```ignore
 /// validated_slice::impl_cmp_for_slice! {
+///     // `Std` is omissible.
+///     Std {
+///         // Module identifier of `core` crate.
+///         // Default is `std`.
+///         core: core,
+///         // Module identifier of `alloc` crate.
+///         // Default is `std`.
+///         alloc: alloc,
+///     };
 ///     Spec {
 ///         spec: AsciiStrSpec,
 ///         custom: AsciiStr,
@@ -575,6 +642,33 @@ macro_rules! impl_std_traits_for_slice {
 ///     /* ... and more pairs! */
 /// }
 /// ```
+///
+/// ## Core and alloc
+///
+/// For `no_std` use, the macro uses custom `core` and `alloc` crate if given.
+/// You can support both nostd and non-nostd environment as below:
+///
+/// ```ignore
+/// // Use `std` when available.
+/// #[cfg(feature = "std")]
+/// use alloc as std;
+/// // Use external `alloc` crate when nostd.
+/// #[cfg(not(feature = "std"))]
+/// use alloc;
+///
+/// validated_slice::impl_cmp_for_slice! {
+///     Std {
+///         core: core,
+///         alloc: alloc,
+///     }
+///     Spec { /* ... */ };
+///     Cmp { /* ... */ };
+///     /* ... */
+/// }
+/// ```
+///
+/// When you don't need `alloc` crate on nostd build, value of `alloc` field is not used.
+/// Simply specify `alloc: alloc,` or something.
 ///
 /// ## Comparison base
 ///
@@ -634,21 +728,88 @@ macro_rules! impl_cmp_for_slice {
             inner: $inner:ty,
             base: $base:ident,
         };
+        Cmp { $($cmp_targets:ident),* };
+        $($rest:tt)*
+    ) => {
+        $crate::impl_cmp_for_slice! {
+            @full;
+            Std {
+                core: std,
+                alloc: std,
+            };
+            Spec {
+                spec: $spec,
+                custom: $custom,
+                inner: $inner,
+                base: $base,
+            };
+            Cmp { $($cmp_targets),* };
+            $($rest)*
+        }
+    };
+    (
+        Std {
+            core: $core:ident,
+            alloc: $alloc:ident,
+        };
+        Spec {
+            spec: $spec:ty,
+            custom: $custom:ty,
+            inner: $inner:ty,
+            base: $base:ident,
+        };
+        Cmp { $($cmp_targets:ident),* };
+        $($rest:tt)*
+    ) => {
+        $crate::impl_cmp_for_slice! {
+            @full;
+            Std {
+                core: $core,
+                alloc: $alloc,
+            };
+            Spec {
+                spec: $spec,
+                custom: $custom,
+                inner: $inner,
+                base: $base,
+            };
+            Cmp { $($cmp_targets),* };
+            $($rest)*
+        }
+    };
+
+    (
+        @full;
+        Std {
+            core: $core:ident,
+            alloc: $alloc:ident,
+        };
+        Spec {
+            spec: $spec:ty,
+            custom: $custom:ty,
+            inner: $inner:ty,
+            base: $base:ident,
+        };
         Cmp { PartialEq, PartialOrd };
         $({ ($($lhs:tt)*), ($($rhs:tt)*) $(, $($opt:ident),*)? });* $(;)?
     ) => {
         $(
             $crate::impl_cmp_for_slice! {
-                @impl[PartialEq]; ($spec, $custom, $inner, $base);
+                @impl[PartialEq]; ({$core, $alloc}, $spec, $custom, $inner, $base);
                 { ($($lhs)*), ($($rhs)*) $(, $($opt),*)? };
             }
             $crate::impl_cmp_for_slice! {
-                @impl[PartialOrd]; ($spec, $custom, $inner, $base);
+                @impl[PartialOrd]; ({$core, $alloc}, $spec, $custom, $inner, $base);
                 { ($($lhs)*), ($($rhs)*) $(, $($opt),*)? };
             }
         )*
     };
     (
+        @full;
+        Std {
+            core: $core:ident,
+            alloc: $alloc:ident,
+        };
         Spec {
             spec: $spec:ty,
             custom: $custom:ty,
@@ -660,12 +821,17 @@ macro_rules! impl_cmp_for_slice {
     ) => {
         $(
             $crate::impl_cmp_for_slice! {
-                @impl[PartialEq]; ($spec, $custom, $inner, $base);
+                @impl[PartialEq]; ({$core, $alloc}, $spec, $custom, $inner, $base);
                 { ($($lhs)*), ($($rhs)*) $(, $($opt),*)? };
             }
         )*
     };
     (
+        @full;
+        Std {
+            core: $core:ident,
+            alloc: $alloc:ident,
+        };
         Spec {
             spec: $spec:ty,
             custom: $custom:ty,
@@ -677,156 +843,156 @@ macro_rules! impl_cmp_for_slice {
     ) => {
         $(
             $crate::impl_cmp_for_slice! {
-                @impl[PartialOrd]; ($spec, $custom, $inner, $base);
+                @impl[PartialOrd]; ({$core, $alloc}, $spec, $custom, $inner, $base);
                 { ($($lhs)*), ($($rhs)*) $(, $($opt),*)? };
             }
         )*
     };
 
     (
-        @impl[PartialEq]; ($spec:ty, $custom:ty, $inner:ty, $base:ident);
+        @impl[PartialEq]; ({$core:ident, $alloc:ident}, $spec:ty, $custom:ty, $inner:ty, $base:ident);
         { ($($lhs:tt)*), ($($rhs:tt)*) };
     ) => {
-        impl std::cmp::PartialEq<
-            $crate::impl_cmp_for_slice!(@type; ($custom, $inner); { $($rhs)* })
-        > for $crate::impl_cmp_for_slice!(@type; ($custom, $inner); { $($lhs)* })
+        impl $core::cmp::PartialEq<
+            $crate::impl_cmp_for_slice!(@type; ({$core, $alloc}, $custom, $inner); { $($rhs)* })
+        > for $crate::impl_cmp_for_slice!(@type; ({$core, $alloc}, $custom, $inner); { $($lhs)* })
         {
             #[inline]
-            fn eq(&self, other: &$crate::impl_cmp_for_slice!(@type; ($custom, $inner); { $($rhs)* })) -> bool {
+            fn eq(&self, other: &$crate::impl_cmp_for_slice!(@type; ({$core, $alloc}, $custom, $inner); { $($rhs)* })) -> bool {
                 $crate::impl_cmp_for_slice!(@cmp_fn[PartialEq]; ($custom, $inner, $base))(
-                    $crate::impl_cmp_for_slice!(@expr[$base]; ($spec, $custom, $inner); { $($lhs)* }; self),
-                    $crate::impl_cmp_for_slice!(@expr[$base]; ($spec, $custom, $inner); { $($rhs)* }; other),
+                    $crate::impl_cmp_for_slice!(@expr[$base]; ({$core, $alloc}, $spec, $custom, $inner); { $($lhs)* }; self),
+                    $crate::impl_cmp_for_slice!(@expr[$base]; ({$core, $alloc}, $spec, $custom, $inner); { $($rhs)* }; other),
                 )
             }
         }
     };
     (
-        @impl[PartialEq]; ($spec:ty, $custom:ty, $inner:ty, $base:ident);
+        @impl[PartialEq]; ({$core:ident, $alloc:ident}, $spec:ty, $custom:ty, $inner:ty, $base:ident);
         { ($($lhs:tt)*), ($($rhs:tt)*), rev };
     ) => {
-        impl std::cmp::PartialEq<
-            $crate::impl_cmp_for_slice!(@type; ($custom, $inner); { $($rhs)* })
-        > for $crate::impl_cmp_for_slice!(@type; ($custom, $inner); { $($lhs)* })
+        impl $core::cmp::PartialEq<
+            $crate::impl_cmp_for_slice!(@type; ({$core, $alloc}, $custom, $inner); { $($rhs)* })
+        > for $crate::impl_cmp_for_slice!(@type; ({$core, $alloc}, $custom, $inner); { $($lhs)* })
         {
             #[inline]
-            fn eq(&self, other: &$crate::impl_cmp_for_slice!(@type; ($custom, $inner); { $($rhs)* })) -> bool {
+            fn eq(&self, other: &$crate::impl_cmp_for_slice!(@type; ({$core, $alloc}, $custom, $inner); { $($rhs)* })) -> bool {
                 $crate::impl_cmp_for_slice!(@cmp_fn[PartialEq]; ($custom, $inner, $base))(
-                    $crate::impl_cmp_for_slice!(@expr[$base]; ($spec, $custom, $inner); { $($lhs)* }; self),
-                    $crate::impl_cmp_for_slice!(@expr[$base]; ($spec, $custom, $inner); { $($rhs)* }; other),
+                    $crate::impl_cmp_for_slice!(@expr[$base]; ({$core, $alloc}, $spec, $custom, $inner); { $($lhs)* }; self),
+                    $crate::impl_cmp_for_slice!(@expr[$base]; ({$core, $alloc}, $spec, $custom, $inner); { $($rhs)* }; other),
                 )
             }
         }
-        impl std::cmp::PartialEq<
-            $crate::impl_cmp_for_slice!(@type; ($custom, $inner); { $($lhs)* })
-        > for $crate::impl_cmp_for_slice!(@type; ($custom, $inner); { $($rhs)* })
+        impl $core::cmp::PartialEq<
+            $crate::impl_cmp_for_slice!(@type; ({$core, $alloc}, $custom, $inner); { $($lhs)* })
+        > for $crate::impl_cmp_for_slice!(@type; ({$core, $alloc}, $custom, $inner); { $($rhs)* })
         {
             #[inline]
-            fn eq(&self, other: &$crate::impl_cmp_for_slice!(@type; ($custom, $inner); { $($lhs)* })) -> bool {
+            fn eq(&self, other: &$crate::impl_cmp_for_slice!(@type; ({$core, $alloc}, $custom, $inner); { $($lhs)* })) -> bool {
                 $crate::impl_cmp_for_slice!(@cmp_fn[PartialEq]; ($custom, $inner, $base))(
-                    $crate::impl_cmp_for_slice!(@expr[$base]; ($spec, $custom, $inner); { $($rhs)* }; self),
-                    $crate::impl_cmp_for_slice!(@expr[$base]; ($spec, $custom, $inner); { $($lhs)* }; other),
+                    $crate::impl_cmp_for_slice!(@expr[$base]; ({$core, $alloc}, $spec, $custom, $inner); { $($rhs)* }; self),
+                    $crate::impl_cmp_for_slice!(@expr[$base]; ({$core, $alloc}, $spec, $custom, $inner); { $($lhs)* }; other),
                 )
             }
         }
     };
     (
-        @impl[PartialOrd]; ($spec:ty, $custom:ty, $inner:ty, $base:ident);
+        @impl[PartialOrd]; ({$core:ident, $alloc:ident}, $spec:ty, $custom:ty, $inner:ty, $base:ident);
         { ($($lhs:tt)*), ($($rhs:tt)*) };
     ) => {
-        impl std::cmp::PartialOrd<
-            $crate::impl_cmp_for_slice!(@type; ($custom, $inner); { $($rhs)* })
-        > for $crate::impl_cmp_for_slice!(@type; ($custom, $inner); { $($lhs)* })
+        impl $core::cmp::PartialOrd<
+            $crate::impl_cmp_for_slice!(@type; ({$core, $alloc}, $custom, $inner); { $($rhs)* })
+        > for $crate::impl_cmp_for_slice!(@type; ({$core, $alloc}, $custom, $inner); { $($lhs)* })
         {
             #[inline]
-            fn partial_cmp(&self, other: &$crate::impl_cmp_for_slice!(@type; ($custom, $inner); { $($rhs)* }))
-                -> std::option::Option<std::cmp::Ordering>
+            fn partial_cmp(&self, other: &$crate::impl_cmp_for_slice!(@type; ({$core, $alloc}, $custom, $inner); { $($rhs)* }))
+                -> $core::option::Option<$core::cmp::Ordering>
             {
                 $crate::impl_cmp_for_slice!(@cmp_fn[PartialOrd]; ($custom, $inner, $base))(
-                    $crate::impl_cmp_for_slice!(@expr[$base]; ($spec, $custom, $inner); { $($lhs)* }; self),
-                    $crate::impl_cmp_for_slice!(@expr[$base]; ($spec, $custom, $inner); { $($rhs)* }; other),
+                    $crate::impl_cmp_for_slice!(@expr[$base]; ({$core, $alloc}, $spec, $custom, $inner); { $($lhs)* }; self),
+                    $crate::impl_cmp_for_slice!(@expr[$base]; ({$core, $alloc}, $spec, $custom, $inner); { $($rhs)* }; other),
                 )
             }
         }
     };
     (
-        @impl[PartialOrd]; ($spec:ty, $custom:ty, $inner:ty, $base:ident);
+        @impl[PartialOrd]; ({$core:ident, $alloc:ident}, $spec:ty, $custom:ty, $inner:ty, $base:ident);
         { ($($lhs:tt)*), ($($rhs:tt)*), rev };
     ) => {
-        impl std::cmp::PartialOrd<
-            $crate::impl_cmp_for_slice!(@type; ($custom, $inner); { $($rhs)* })
-        > for $crate::impl_cmp_for_slice!(@type; ($custom, $inner); { $($lhs)* })
+        impl $core::cmp::PartialOrd<
+            $crate::impl_cmp_for_slice!(@type; ({$core, $alloc}, $custom, $inner); { $($rhs)* })
+        > for $crate::impl_cmp_for_slice!(@type; ({$core, $alloc}, $custom, $inner); { $($lhs)* })
         {
             #[inline]
-            fn partial_cmp(&self, other: &$crate::impl_cmp_for_slice!(@type; ($custom, $inner); { $($rhs)* }))
-                -> std::option::Option<std::cmp::Ordering>
+            fn partial_cmp(&self, other: &$crate::impl_cmp_for_slice!(@type; ({$core, $alloc}, $custom, $inner); { $($rhs)* }))
+                -> $core::option::Option<$core::cmp::Ordering>
             {
                 $crate::impl_cmp_for_slice!(@cmp_fn[PartialOrd]; ($custom, $inner, $base))(
-                    $crate::impl_cmp_for_slice!(@expr[$base]; ($spec, $custom, $inner); { $($lhs)* }; self),
-                    $crate::impl_cmp_for_slice!(@expr[$base]; ($spec, $custom, $inner); { $($rhs)* }; other),
+                    $crate::impl_cmp_for_slice!(@expr[$base]; ({$core, $alloc}, $spec, $custom, $inner); { $($lhs)* }; self),
+                    $crate::impl_cmp_for_slice!(@expr[$base]; ({$core, $alloc}, $spec, $custom, $inner); { $($rhs)* }; other),
                 )
             }
         }
-        impl std::cmp::PartialOrd<
-            $crate::impl_cmp_for_slice!(@type; ($custom, $inner); { $($lhs)* })
-        > for $crate::impl_cmp_for_slice!(@type; ($custom, $inner); { $($rhs)* })
+        impl $core::cmp::PartialOrd<
+            $crate::impl_cmp_for_slice!(@type; ({$core, $alloc}, $custom, $inner); { $($lhs)* })
+        > for $crate::impl_cmp_for_slice!(@type; ({$core, $alloc}, $custom, $inner); { $($rhs)* })
         {
             #[inline]
-            fn partial_cmp(&self, other: &$crate::impl_cmp_for_slice!(@type; ($custom, $inner); { $($lhs)* }))
-                -> std::option::Option<std::cmp::Ordering>
+            fn partial_cmp(&self, other: &$crate::impl_cmp_for_slice!(@type; ({$core, $alloc}, $custom, $inner); { $($lhs)* }))
+                -> $core::option::Option<$core::cmp::Ordering>
             {
                 $crate::impl_cmp_for_slice!(@cmp_fn[PartialOrd]; ($custom, $inner, $base))(
-                    $crate::impl_cmp_for_slice!(@expr[$base]; ($spec, $custom, $inner); { $($rhs)* }; self),
-                    $crate::impl_cmp_for_slice!(@expr[$base]; ($spec, $custom, $inner); { $($lhs)* }; other),
+                    $crate::impl_cmp_for_slice!(@expr[$base]; ({$core, $alloc}, $spec, $custom, $inner); { $($rhs)* }; self),
+                    $crate::impl_cmp_for_slice!(@expr[$base]; ({$core, $alloc}, $spec, $custom, $inner); { $($lhs)* }; other),
                 )
             }
         }
     };
 
-    (@type; ($custom:ty, $inner:ty); { {Custom} }) => { $custom };
-    (@type; ($custom:ty, $inner:ty); { &{Custom} }) => { &$custom };
-    (@type; ($custom:ty, $inner:ty); { Cow<{Custom}> }) => { std::borrow::Cow<'_, $custom> };
-    (@type; ($custom:ty, $inner:ty); { {Inner} }) => { $inner };
-    (@type; ($custom:ty, $inner:ty); { &{Inner} }) => { &$inner };
-    (@type; ($custom:ty, $inner:ty); { Cow<{Inner}> }) => { std::borrow::Cow<'_, $inner> };
-    (@type; ($custom:ty, $inner:ty); { $ty:ty }) => { $ty };
+    (@type; ({$core:ident, $alloc:ident}, $custom:ty, $inner:ty); { {Custom} }) => { $custom };
+    (@type; ({$core:ident, $alloc:ident}, $custom:ty, $inner:ty); { &{Custom} }) => { &$custom };
+    (@type; ({$core:ident, $alloc:ident}, $custom:ty, $inner:ty); { Cow<{Custom}> }) => { $alloc::borrow::Cow<'_, $custom> };
+    (@type; ({$core:ident, $alloc:ident}, $custom:ty, $inner:ty); { {Inner} }) => { $inner };
+    (@type; ({$core:ident, $alloc:ident}, $custom:ty, $inner:ty); { &{Inner} }) => { &$inner };
+    (@type; ({$core:ident, $alloc:ident}, $custom:ty, $inner:ty); { Cow<{Inner}> }) => { $alloc::borrow::Cow<'_, $inner> };
+    (@type; ({$core:ident, $alloc:ident}, $custom:ty, $inner:ty); { $ty:ty }) => { $ty };
 
-    (@cmp_fn[PartialEq]; ($custom:ty, $inner:ty, Inner)) => { <$inner as std::cmp::PartialEq<$inner>>::eq };
-    (@cmp_fn[PartialEq]; ($custom:ty, $inner:ty, Custom)) => { <$custom as std::cmp::PartialEq<$custom>>::eq };
-    (@cmp_fn[PartialOrd]; ($custom:ty, $inner:ty, Inner)) => { <$inner as std::cmp::PartialOrd<$inner>>::partial_cmp };
-    (@cmp_fn[PartialOrd]; ($custom:ty, $inner:ty, Custom)) => { <$custom as std::cmp::PartialOrd<$custom>>::partial_cmp };
+    (@cmp_fn[PartialEq]; ($custom:ty, $inner:ty, Inner)) => { <$inner as core::cmp::PartialEq<$inner>>::eq };
+    (@cmp_fn[PartialEq]; ($custom:ty, $inner:ty, Custom)) => { <$custom as core::cmp::PartialEq<$custom>>::eq };
+    (@cmp_fn[PartialOrd]; ($custom:ty, $inner:ty, Inner)) => { <$inner as core::cmp::PartialOrd<$inner>>::partial_cmp };
+    (@cmp_fn[PartialOrd]; ($custom:ty, $inner:ty, Custom)) => { <$custom as core::cmp::PartialOrd<$custom>>::partial_cmp };
 
-    (@expr[Inner]; ($spec:ty, $custom:ty, $inner:ty); { {Custom} }; $expr:expr) => {
+    (@expr[Inner]; ({$core:ident, $alloc:ident}, $spec:ty, $custom:ty, $inner:ty); { {Custom} }; $expr:expr) => {
         <$spec as $crate::SliceSpec>::as_inner($expr)
     };
-    (@expr[Inner]; ($spec:ty, $custom:ty, $inner:ty); { &{Custom} }; $expr:expr) => {
+    (@expr[Inner]; ({$core:ident, $alloc:ident}, $spec:ty, $custom:ty, $inner:ty); { &{Custom} }; $expr:expr) => {
         <$spec as $crate::SliceSpec>::as_inner(*$expr)
     };
-    (@expr[Inner]; ($spec:ty, $custom:ty, $inner:ty); { Cow<{Custom}> }; $expr:expr) => {
+    (@expr[Inner]; ({$core:ident, $alloc:ident}, $spec:ty, $custom:ty, $inner:ty); { Cow<{Custom}> }; $expr:expr) => {
         <$spec as $crate::SliceSpec>::as_inner(&**$expr)
     };
-    (@expr[Inner]; ($spec:ty, $custom:ty, $inner:ty); { {Inner} }; $expr:expr) => {
+    (@expr[Inner]; ({$core:ident, $alloc:ident}, $spec:ty, $custom:ty, $inner:ty); { {Inner} }; $expr:expr) => {
         $expr
     };
-    (@expr[Inner]; ($spec:ty, $custom:ty, $inner:ty); { &{Inner} }; $expr:expr) => {
+    (@expr[Inner]; ({$core:ident, $alloc:ident}, $spec:ty, $custom:ty, $inner:ty); { &{Inner} }; $expr:expr) => {
         *$expr
     };
-    (@expr[Inner]; ($spec:ty, $custom:ty, $inner:ty); { Cow<{Inner}> }; $expr:expr) => {
+    (@expr[Inner]; ({$core:ident, $alloc:ident}, $spec:ty, $custom:ty, $inner:ty); { Cow<{Inner}> }; $expr:expr) => {
         &**$expr
     };
-    (@expr[Inner]; ($spec:ty, $custom:ty, $inner:ty); { $ty:ty }; $expr:expr) => {
-        std::convert::AsRef::<$inner>::as_ref($expr)
+    (@expr[Inner]; ({$core:ident, $alloc:ident}, $spec:ty, $custom:ty, $inner:ty); { $ty:ty }; $expr:expr) => {
+        $core::convert::AsRef::<$inner>::as_ref($expr)
     };
-    (@expr[Custom]; ($spec:ty, $custom:ty, $inner:ty); { {Custom} }; $expr:expr) => {
+    (@expr[Custom]; ({$core:ident, $alloc:ident}, $spec:ty, $custom:ty, $inner:ty); { {Custom} }; $expr:expr) => {
         $expr
     };
-    (@expr[Custom]; ($spec:ty, $custom:ty, $inner:ty); { &{Custom} }; $expr:expr) => {
+    (@expr[Custom]; ({$core:ident, $alloc:ident}, $spec:ty, $custom:ty, $inner:ty); { &{Custom} }; $expr:expr) => {
         *$expr
     };
-    (@expr[Custom]; ($spec:ty, $custom:ty, $inner:ty); { Cow<{Custom}> }; $expr:expr) => {
+    (@expr[Custom]; ({$core:ident, $alloc:ident}, $spec:ty, $custom:ty, $inner:ty); { Cow<{Custom}> }; $expr:expr) => {
         &**$expr
     };
-    (@expr[Custom]; ($spec:ty, $custom:ty, $inner:ty); { $ty:ty }; $expr:expr) => {
-        std::convert::AsRef::<$custom>::as_ref($expr)
+    (@expr[Custom]; ({$core:ident, $alloc:ident}, $spec:ty, $custom:ty, $inner:ty); { $ty:ty }; $expr:expr) => {
+        $core::convert::AsRef::<$custom>::as_ref($expr)
     };
 
     ($($rest:tt)*) => {
