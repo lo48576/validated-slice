@@ -24,7 +24,7 @@ For example:
 * Sorted array.
 
 However, primitive types `[T]` and `str` have many trait impls, and custom array types might be non-user-friendly without such trait impls.
-(For example, if you want ASCII string `&AsciiStr`, you may also want `Default for &AsciiStr`, `std::convert::TryFrom<&str> for &AsciiStr>`, `PartialEq<str> for &AsciiStr`, `PartialOrd<AsciiStr> for Cow<'_, AsciiStr>`, `std::fmt::Display for `AsciiStr`, etc.)
+(For example, if you want ASCII string `&AsciiStr`, you may also want `Default for &AsciiStr`, `std::convert::TryFrom<&str> for &AsciiStr`, `PartialEq<str> for &AsciiStr`, `PartialOrd<AsciiStr> for Cow<'_, AsciiStr>`, `std::fmt::Display for `AsciiStr`, etc.)
 
 `validated-slice` helps users to automatically implement these traits common for array and string with less boilerplates.
 
