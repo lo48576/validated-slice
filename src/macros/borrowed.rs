@@ -2,6 +2,8 @@
 
 /// Implements some methods of [`SliceSpec`] trait automatically.
 ///
+/// This macro can be safely used in nostd environment.
+///
 /// # Examples
 ///
 /// ```
