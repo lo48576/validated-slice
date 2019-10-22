@@ -1,6 +1,8 @@
-//! ASCII string.
+//! ASCII string in (pseudo) nostd and alloc environment.
 //!
 //! Types for strings which consists of only ASCII characters.
+
+use std as alloc;
 
 struct AsciiStrSpec;
 
@@ -44,13 +46,17 @@ pub struct AsciiError {
 #[derive(Eq, Ord, Hash)]
 pub struct AsciiStr(str);
 
-impl std::fmt::Debug for AsciiStr {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Debug for AsciiStr {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(f, "Ascii({:?})", &self.0)
     }
 }
 
 validated_slice::impl_std_traits_for_slice! {
+    Std {
+        core: core,
+        alloc: alloc,
+    };
     Spec {
         spec: AsciiStrSpec,
         custom: AsciiStr,
@@ -84,6 +90,10 @@ validated_slice::impl_std_traits_for_slice! {
 }
 
 validated_slice::impl_cmp_for_slice! {
+    Std {
+        core: core,
+        alloc: alloc,
+    };
     Spec {
         spec: AsciiStrSpec,
         custom: AsciiStr,
@@ -94,7 +104,7 @@ validated_slice::impl_cmp_for_slice! {
     // This is same as `#[derive(PartialEq, PartialOrd)]`.
     { ({Custom}), ({Custom}) };
     { ({Custom}), (&{Custom}), rev };
-    // NOTE: This requires `std::borrow::ToOwned for AsciiStr`.
+    // NOTE: This requires `alloc::borrow::ToOwned for AsciiStr`.
     { ({Custom}), (Cow<{Custom}>), rev };
 
     { ({Custom}), ({Inner}), rev };
@@ -156,6 +166,10 @@ impl From<AsciiString> for AsciiBoxStr {
 }
 
 validated_slice::impl_std_traits_for_owned_slice! {
+    Std {
+        core: core,
+        alloc: alloc,
+    };
     Spec {
         spec: AsciiBoxStrSpec,
         custom: AsciiBoxStr,
@@ -209,6 +223,10 @@ validated_slice::impl_std_traits_for_owned_slice! {
 }
 
 validated_slice::impl_cmp_for_owned_slice! {
+    Std {
+        core: core,
+        alloc: alloc,
+    };
     Spec {
         spec: AsciiBoxStrSpec,
         custom: AsciiBoxStr,
@@ -222,7 +240,7 @@ validated_slice::impl_cmp_for_owned_slice! {
     { ({Custom}), ({Custom}) };
     { ({Custom}), ({SliceCustom}), rev };
     { ({Custom}), (&{SliceCustom}), rev };
-    //// NOTE: This requires `std::borrow::Borrow for AsciiBoxStr`.
+    //// NOTE: This requires `core::borrow::Borrow for AsciiBoxStr`.
     { ({Custom}), (Cow<{SliceCustom}>), rev };
     { ({Custom}), ({Inner}), rev };
     { ({Custom}), ({SliceInner}), rev };
@@ -280,6 +298,10 @@ impl From<AsciiBoxStr> for AsciiString {
 }
 
 validated_slice::impl_std_traits_for_owned_slice! {
+    Std {
+        core: core,
+        alloc: alloc,
+    };
     Spec {
         spec: AsciiStringSpec,
         custom: AsciiString,
@@ -333,6 +355,10 @@ validated_slice::impl_std_traits_for_owned_slice! {
 }
 
 validated_slice::impl_cmp_for_owned_slice! {
+    Std {
+        core: core,
+        alloc: alloc,
+    };
     Spec {
         spec: AsciiStringSpec,
         custom: AsciiString,
@@ -346,7 +372,7 @@ validated_slice::impl_cmp_for_owned_slice! {
     { ({Custom}), ({Custom}) };
     { ({Custom}), ({SliceCustom}), rev };
     { ({Custom}), (&{SliceCustom}), rev };
-    //// NOTE: This requires `std::borrow::Borrow for AsciiString`.
+    //// NOTE: This requires `core::borrow::Borrow for AsciiString`.
     { ({Custom}), (Cow<{SliceCustom}>), rev };
     { ({Custom}), ({Inner}), rev };
     { ({Custom}), ({SliceInner}), rev };
@@ -375,8 +401,8 @@ mod ascii_str {
         AsciiStr: PartialEq<AsciiStr>,
         for<'a> AsciiStr: PartialEq<&'a AsciiStr>,
         for<'a> &'a AsciiStr: PartialEq<AsciiStr>,
-        for<'a> AsciiStr: PartialEq<std::borrow::Cow<'a, AsciiStr>>,
-        for<'a> std::borrow::Cow<'a, AsciiStr>: PartialEq<std::borrow::Cow<'a, AsciiStr>>,
+        for<'a> AsciiStr: PartialEq<alloc::borrow::Cow<'a, AsciiStr>>,
+        for<'a> alloc::borrow::Cow<'a, AsciiStr>: PartialEq<alloc::borrow::Cow<'a, AsciiStr>>,
     {
     }
 
@@ -389,27 +415,27 @@ mod ascii_str {
         for<'a> &'a str: PartialEq<AsciiStr>,
         for<'a> &'a AsciiStr: PartialEq<str>,
         for<'a> str: PartialEq<&'a AsciiStr>,
-        for<'a> AsciiStr: PartialEq<std::borrow::Cow<'a, str>>,
-        for<'a> std::borrow::Cow<'a, str>: PartialEq<AsciiStr>,
-        for<'a, 'b> &'b AsciiStr: PartialEq<std::borrow::Cow<'a, str>>,
-        for<'a, 'b> std::borrow::Cow<'a, str>: PartialEq<&'b AsciiStr>,
+        for<'a> AsciiStr: PartialEq<alloc::borrow::Cow<'a, str>>,
+        for<'a> alloc::borrow::Cow<'a, str>: PartialEq<AsciiStr>,
+        for<'a, 'b> &'b AsciiStr: PartialEq<alloc::borrow::Cow<'a, str>>,
+        for<'a, 'b> alloc::borrow::Cow<'a, str>: PartialEq<&'b AsciiStr>,
     {
     }
 
     #[test]
     fn from_smart_ptr()
     where
-        for<'a> std::sync::Arc<AsciiStr>: From<&'a AsciiStr>,
-        for<'a> Box<AsciiStr>: From<&'a AsciiStr>,
-        for<'a> std::rc::Rc<AsciiStr>: From<&'a AsciiStr>,
+        for<'a> alloc::sync::Arc<AsciiStr>: From<&'a AsciiStr>,
+        for<'a> alloc::boxed::Box<AsciiStr>: From<&'a AsciiStr>,
+        for<'a> alloc::rc::Rc<AsciiStr>: From<&'a AsciiStr>,
     {
     }
 
     #[test]
     fn try_from()
     where
-        for<'a> &'a AsciiStr: std::convert::TryFrom<&'a str>,
-        for<'a> &'a mut AsciiStr: std::convert::TryFrom<&'a mut str>,
+        for<'a> &'a AsciiStr: core::convert::TryFrom<&'a str>,
+        for<'a> &'a mut AsciiStr: core::convert::TryFrom<&'a mut str>,
     {
     }
 
@@ -424,10 +450,10 @@ mod ascii_str {
     #[test]
     fn fmt()
     where
-        AsciiStr: std::fmt::Debug,
-        AsciiStr: std::fmt::Display,
+        AsciiStr: core::fmt::Debug,
+        AsciiStr: core::fmt::Display,
     {
-        use std::convert::TryFrom;
+        use core::convert::TryFrom;
 
         let sample_raw = "text";
         let sample_ascii = <&AsciiStr>::try_from(sample_raw).expect("Should never fail");
@@ -438,7 +464,7 @@ mod ascii_str {
     #[test]
     fn deref()
     where
-        AsciiStr: std::ops::Deref<Target = str>,
+        AsciiStr: core::ops::Deref<Target = str>,
     {
     }
 }
@@ -460,15 +486,15 @@ mod ascii_box_str {
     #[test]
     fn borrow()
     where
-        AsciiBoxStr: std::borrow::Borrow<str>,
-        AsciiBoxStr: std::borrow::Borrow<AsciiStr>,
+        AsciiBoxStr: core::borrow::Borrow<str>,
+        AsciiBoxStr: core::borrow::Borrow<AsciiStr>,
     {
     }
 
     #[test]
     fn borrow_mut()
     where
-        AsciiBoxStr: std::borrow::BorrowMut<AsciiStr>,
+        AsciiBoxStr: core::borrow::BorrowMut<AsciiStr>,
     {
     }
 
@@ -480,8 +506,8 @@ mod ascii_box_str {
         AsciiStr: PartialEq<AsciiBoxStr>,
         for<'a> AsciiBoxStr: PartialEq<&'a AsciiStr>,
         for<'a> &'a AsciiStr: PartialEq<AsciiBoxStr>,
-        for<'a> AsciiBoxStr: PartialEq<std::borrow::Cow<'a, AsciiStr>>,
-        for<'a> std::borrow::Cow<'a, AsciiStr>: PartialEq<AsciiBoxStr>,
+        for<'a> AsciiBoxStr: PartialEq<alloc::borrow::Cow<'a, AsciiStr>>,
+        for<'a> alloc::borrow::Cow<'a, AsciiStr>: PartialEq<AsciiBoxStr>,
     {
     }
 
@@ -492,8 +518,8 @@ mod ascii_box_str {
         str: PartialEq<AsciiBoxStr>,
         for<'a> AsciiBoxStr: PartialEq<&'a str>,
         for<'a> &'a str: PartialEq<AsciiBoxStr>,
-        for<'a> AsciiBoxStr: PartialEq<std::borrow::Cow<'a, str>>,
-        for<'a> std::borrow::Cow<'a, str>: PartialEq<AsciiBoxStr>,
+        for<'a> AsciiBoxStr: PartialEq<alloc::borrow::Cow<'a, str>>,
+        for<'a> alloc::borrow::Cow<'a, str>: PartialEq<AsciiBoxStr>,
         Box<str>: PartialEq<AsciiStr>,
         AsciiStr: PartialEq<Box<str>>,
         for<'a> Box<str>: PartialEq<&'a AsciiStr>,
@@ -509,8 +535,8 @@ mod ascii_box_str {
         AsciiStr: PartialOrd<AsciiBoxStr>,
         for<'a> AsciiBoxStr: PartialOrd<&'a AsciiStr>,
         for<'a> &'a AsciiStr: PartialOrd<AsciiBoxStr>,
-        for<'a> AsciiBoxStr: PartialOrd<std::borrow::Cow<'a, AsciiStr>>,
-        for<'a> std::borrow::Cow<'a, AsciiStr>: PartialOrd<AsciiBoxStr>,
+        for<'a> AsciiBoxStr: PartialOrd<alloc::borrow::Cow<'a, AsciiStr>>,
+        for<'a> alloc::borrow::Cow<'a, AsciiStr>: PartialOrd<AsciiBoxStr>,
     {
     }
 
@@ -521,8 +547,8 @@ mod ascii_box_str {
         str: PartialOrd<AsciiBoxStr>,
         for<'a> AsciiBoxStr: PartialOrd<&'a str>,
         for<'a> &'a str: PartialOrd<AsciiBoxStr>,
-        for<'a> AsciiBoxStr: PartialOrd<std::borrow::Cow<'a, str>>,
-        for<'a> std::borrow::Cow<'a, str>: PartialOrd<AsciiBoxStr>,
+        for<'a> AsciiBoxStr: PartialOrd<alloc::borrow::Cow<'a, str>>,
+        for<'a> alloc::borrow::Cow<'a, str>: PartialOrd<AsciiBoxStr>,
         Box<str>: PartialOrd<AsciiStr>,
         AsciiStr: PartialOrd<Box<str>>,
         for<'a> Box<str>: PartialOrd<&'a AsciiStr>,
@@ -540,18 +566,18 @@ mod ascii_box_str {
     #[test]
     fn try_from()
     where
-        for<'a> AsciiBoxStr: std::convert::TryFrom<&'a str>,
-        AsciiBoxStr: std::convert::TryFrom<Box<str>>,
+        for<'a> AsciiBoxStr: core::convert::TryFrom<&'a str>,
+        AsciiBoxStr: core::convert::TryFrom<Box<str>>,
     {
     }
 
     #[test]
     fn fmt()
     where
-        AsciiBoxStr: std::fmt::Debug,
-        AsciiBoxStr: std::fmt::Display,
+        AsciiBoxStr: core::fmt::Debug,
+        AsciiBoxStr: core::fmt::Display,
     {
-        use std::convert::TryFrom;
+        use core::convert::TryFrom;
 
         let sample_raw = "text";
         let sample_ascii = AsciiBoxStr::try_from(sample_raw).expect("Should never fail");
@@ -571,21 +597,21 @@ mod ascii_box_str {
     #[test]
     fn deref()
     where
-        AsciiBoxStr: std::ops::Deref<Target = AsciiStr>,
+        AsciiBoxStr: core::ops::Deref<Target = AsciiStr>,
     {
     }
 
     #[test]
     fn deref_mut()
     where
-        AsciiBoxStr: std::ops::DerefMut<Target = AsciiStr>,
+        AsciiBoxStr: core::ops::DerefMut<Target = AsciiStr>,
     {
     }
 
     #[test]
     fn from_str()
     where
-        AsciiBoxStr: std::str::FromStr<Err = AsciiError>,
+        AsciiBoxStr: core::str::FromStr<Err = AsciiError>,
     {
     }
 }
@@ -607,22 +633,22 @@ mod ascii_string {
     #[test]
     fn borrow()
     where
-        AsciiString: std::borrow::Borrow<str>,
-        AsciiString: std::borrow::Borrow<AsciiStr>,
+        AsciiString: core::borrow::Borrow<str>,
+        AsciiString: core::borrow::Borrow<AsciiStr>,
     {
     }
 
     #[test]
     fn borrow_mut()
     where
-        AsciiString: std::borrow::BorrowMut<AsciiStr>,
+        AsciiString: core::borrow::BorrowMut<AsciiStr>,
     {
     }
 
     #[test]
     fn to_owned()
     where
-        AsciiStr: std::borrow::ToOwned<Owned = AsciiString>,
+        AsciiStr: alloc::borrow::ToOwned<Owned = AsciiString>,
     {
     }
 
@@ -634,8 +660,8 @@ mod ascii_string {
         AsciiStr: PartialEq<AsciiString>,
         for<'a> AsciiString: PartialEq<&'a AsciiStr>,
         for<'a> &'a AsciiStr: PartialEq<AsciiString>,
-        for<'a> AsciiString: PartialEq<std::borrow::Cow<'a, AsciiStr>>,
-        for<'a> std::borrow::Cow<'a, AsciiStr>: PartialEq<AsciiString>,
+        for<'a> AsciiString: PartialEq<alloc::borrow::Cow<'a, AsciiStr>>,
+        for<'a> alloc::borrow::Cow<'a, AsciiStr>: PartialEq<AsciiString>,
     {
     }
 
@@ -646,8 +672,8 @@ mod ascii_string {
         str: PartialEq<AsciiString>,
         for<'a> AsciiString: PartialEq<&'a str>,
         for<'a> &'a str: PartialEq<AsciiString>,
-        for<'a> AsciiString: PartialEq<std::borrow::Cow<'a, str>>,
-        for<'a> std::borrow::Cow<'a, str>: PartialEq<AsciiString>,
+        for<'a> AsciiString: PartialEq<alloc::borrow::Cow<'a, str>>,
+        for<'a> alloc::borrow::Cow<'a, str>: PartialEq<AsciiString>,
         String: PartialEq<AsciiStr>,
         AsciiStr: PartialEq<String>,
         for<'a> String: PartialEq<&'a AsciiStr>,
@@ -663,8 +689,8 @@ mod ascii_string {
         AsciiStr: PartialOrd<AsciiString>,
         for<'a> AsciiString: PartialOrd<&'a AsciiStr>,
         for<'a> &'a AsciiStr: PartialOrd<AsciiString>,
-        for<'a> AsciiString: PartialOrd<std::borrow::Cow<'a, AsciiStr>>,
-        for<'a> std::borrow::Cow<'a, AsciiStr>: PartialOrd<AsciiString>,
+        for<'a> AsciiString: PartialOrd<alloc::borrow::Cow<'a, AsciiStr>>,
+        for<'a> alloc::borrow::Cow<'a, AsciiStr>: PartialOrd<AsciiString>,
     {
     }
 
@@ -675,8 +701,8 @@ mod ascii_string {
         str: PartialOrd<AsciiString>,
         for<'a> AsciiString: PartialOrd<&'a str>,
         for<'a> &'a str: PartialOrd<AsciiString>,
-        for<'a> AsciiString: PartialOrd<std::borrow::Cow<'a, str>>,
-        for<'a> std::borrow::Cow<'a, str>: PartialOrd<AsciiString>,
+        for<'a> AsciiString: PartialOrd<alloc::borrow::Cow<'a, str>>,
+        for<'a> alloc::borrow::Cow<'a, str>: PartialOrd<AsciiString>,
         String: PartialOrd<AsciiStr>,
         AsciiStr: PartialOrd<String>,
         for<'a> String: PartialOrd<&'a AsciiStr>,
@@ -694,18 +720,18 @@ mod ascii_string {
     #[test]
     fn try_from()
     where
-        for<'a> AsciiString: std::convert::TryFrom<&'a str>,
-        AsciiString: std::convert::TryFrom<String>,
+        for<'a> AsciiString: core::convert::TryFrom<&'a str>,
+        AsciiString: core::convert::TryFrom<String>,
     {
     }
 
     #[test]
     fn fmt()
     where
-        AsciiString: std::fmt::Debug,
-        AsciiString: std::fmt::Display,
+        AsciiString: core::fmt::Debug,
+        AsciiString: core::fmt::Display,
     {
-        use std::convert::TryFrom;
+        use core::convert::TryFrom;
 
         let sample_raw = "text";
         let sample_ascii = AsciiString::try_from(sample_raw).expect("Should never fail");
@@ -725,21 +751,21 @@ mod ascii_string {
     #[test]
     fn deref()
     where
-        AsciiString: std::ops::Deref<Target = AsciiStr>,
+        AsciiString: core::ops::Deref<Target = AsciiStr>,
     {
     }
 
     #[test]
     fn deref_mut()
     where
-        AsciiString: std::ops::DerefMut<Target = AsciiStr>,
+        AsciiString: core::ops::DerefMut<Target = AsciiStr>,
     {
     }
 
     #[test]
     fn from_str()
     where
-        AsciiString: std::str::FromStr<Err = AsciiError>,
+        AsciiString: core::str::FromStr<Err = AsciiError>,
     {
     }
 }
