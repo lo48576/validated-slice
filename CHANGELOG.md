@@ -7,7 +7,7 @@
       Macros and traits exported from this crate can be used both with std and without std.
 
 ### Added
-* nostd support is added.
+* nostd support is added (329bad44bfaf60fc9ca65639940d3e241dad2e48).
     * `impl_{std_traits,cmp}_for_{,owned}_slice!` macro now accepts optional arguments to specify
       `core` and `alloc` crate.
       If omitted, `std` is used as default for both.
