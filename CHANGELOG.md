@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.2.0]
+
 * Add support for conversion from custom type into inner type.
 * Add a new trait method `into_inner()` to `OwnedSliceSpec`.
 * Make spec types uninhabited in tests and docs.
@@ -40,6 +42,7 @@
 
 First release.
 
-[Unreleased]: <https://github.com/lo48576/validated-slice/compare/v0.1.1...develop>
+[Unreleased]: <https://github.com/lo48576/validated-slice/compare/v0.2.0...develop>
+[0.2.0]: <https://github.com/lo48576/validated-slice/releases/tag/v0.2.0>
 [0.1.1]: <https://github.com/lo48576/validated-slice/releases/tag/v0.1.1>
 [0.1.0]: <https://github.com/lo48576/validated-slice/releases/tag/v0.1.0>
