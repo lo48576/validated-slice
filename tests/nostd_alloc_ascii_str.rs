@@ -4,7 +4,7 @@
 
 use std as alloc;
 
-struct AsciiStrSpec;
+enum AsciiStrSpec {}
 
 impl validated_slice::SliceSpec for AsciiStrSpec {
     type Custom = AsciiStr;
@@ -118,7 +118,7 @@ validated_slice::impl_cmp_for_slice! {
     //{ (&{Inner}), (Cow<{Custom}>), rev };
 }
 
-struct AsciiBoxStrSpec;
+enum AsciiBoxStrSpec {}
 
 impl validated_slice::OwnedSliceSpec for AsciiBoxStrSpec {
     type Custom = AsciiBoxStr;
@@ -250,7 +250,7 @@ validated_slice::impl_cmp_for_owned_slice! {
     { ({Inner}), (&{SliceCustom}), rev };
 }
 
-struct AsciiStringSpec;
+enum AsciiStringSpec {}
 
 impl validated_slice::OwnedSliceSpec for AsciiStringSpec {
     type Custom = AsciiString;

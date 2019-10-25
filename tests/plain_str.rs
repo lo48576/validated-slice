@@ -2,7 +2,7 @@
 //!
 //! String types defined here are almost same as std string types.
 
-struct PlainStrSpec;
+enum PlainStrSpec {}
 
 impl validated_slice::SliceSpec for PlainStrSpec {
     type Custom = PlainStr;
@@ -102,7 +102,7 @@ validated_slice::impl_cmp_for_slice! {
     //{ (&{Inner}), (Cow<{Custom}>), rev };
 }
 
-struct PlainBoxStrSpec;
+enum PlainBoxStrSpec {}
 
 impl validated_slice::OwnedSliceSpec for PlainBoxStrSpec {
     type Custom = PlainBoxStr;
@@ -228,7 +228,7 @@ validated_slice::impl_cmp_for_owned_slice! {
     { ({Inner}), (&{SliceCustom}), rev };
 }
 
-struct PlainStringSpec;
+enum PlainStringSpec {}
 
 impl validated_slice::OwnedSliceSpec for PlainStringSpec {
     type Custom = PlainString;

@@ -35,7 +35,7 @@ mod macros;
 ///     valid_up_to: usize,
 /// }
 ///
-/// struct AsciiStrSpec;
+/// enum AsciiStrSpec {}
 ///
 /// impl validated_slice::SliceSpec for AsciiStrSpec {
 ///     type Custom = AsciiStr;
@@ -121,7 +121,7 @@ pub trait SliceSpec {
 /// #[derive(Default, Debug, Clone, Eq, Ord, Hash)]
 /// pub struct AsciiString(String);
 ///
-/// struct AsciiStringSpec;
+/// enum AsciiStringSpec {}
 ///
 /// impl validated_slice::OwnedSliceSpec for AsciiStringSpec {
 ///     type Custom = AsciiString;
