@@ -18,7 +18,7 @@
 /// pub struct MyStr([u8]);
 ///
 /// /// Spec for `MyStr` type.
-/// struct MyStrSpec;
+/// enum MyStrSpec {}
 ///
 /// impl validated_slice::SliceSpec for MyStrSpec {
 ///     // My `str` type.
@@ -36,7 +36,7 @@
 /// pub struct AsciiString(Vec<u8>);
 ///
 /// /// Spec for `MyString` type.
-/// struct MyStringSpec;
+/// enum MyStringSpec {}
 ///
 /// impl validated_slice::OwnedSliceSpec for MyStringSpec {
 ///     // My `String` type.

@@ -2,7 +2,7 @@
 //!
 //! Types for strings which consists of only ASCII characters.
 
-struct AsciiStrSpec;
+enum AsciiStrSpec {}
 
 impl validated_slice::SliceSpec for AsciiStrSpec {
     type Custom = AsciiStr;

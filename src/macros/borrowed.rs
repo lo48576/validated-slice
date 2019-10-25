@@ -13,7 +13,7 @@
 /// }
 /// pub struct AsciiStr(str);
 ///
-/// struct AsciiStrSpec;
+/// enum AsciiStrSpec {}
 ///
 /// impl validated_slice::SliceSpec for AsciiStrSpec {
 ///     type Custom = AsciiStr;
@@ -108,7 +108,7 @@ macro_rules! impl_slice_spec_methods {
 /// pub struct MyStr([u8]);
 ///
 /// /// Spec for `MyStr` type.
-/// struct MyStrSpec;
+/// enum MyStrSpec {}
 ///
 /// impl validated_slice::SliceSpec for MyStrSpec {
 ///     // My `str` type.
