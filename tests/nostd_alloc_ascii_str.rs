@@ -155,6 +155,11 @@ impl validated_slice::OwnedSliceSpec for AsciiBoxStrSpec {
     unsafe fn from_inner_unchecked(s: Self::Inner) -> Self::Custom {
         AsciiBoxStr(s)
     }
+
+    #[inline]
+    fn into_inner(s: Self::Custom) -> Self::Inner {
+        s.0
+    }
 }
 
 /// ASCII string boxed slice.
@@ -286,6 +291,11 @@ impl validated_slice::OwnedSliceSpec for AsciiStringSpec {
     #[inline]
     unsafe fn from_inner_unchecked(s: Self::Inner) -> Self::Custom {
         AsciiString(s)
+    }
+
+    #[inline]
+    fn into_inner(s: Self::Custom) -> Self::Inner {
+        s.0
     }
 }
 

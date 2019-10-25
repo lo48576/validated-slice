@@ -159,6 +159,11 @@ pub trait SliceSpec {
 ///     unsafe fn from_inner_unchecked(s: Self::Inner) -> Self::Custom {
 ///         AsciiString(s)
 ///     }
+///
+///     #[inline]
+///     fn into_inner(s: Self::Custom) -> Self::Inner {
+///         s.0
+///     }
 /// }
 /// ```
 pub trait OwnedSliceSpec {
@@ -196,4 +201,6 @@ pub trait OwnedSliceSpec {
     ///
     /// If any of the condition is not met, this function may cause undefined behavior.
     unsafe fn from_inner_unchecked(s: Self::Inner) -> Self::Custom;
+    /// Returns the inner value with its ownership.
+    fn into_inner(s: Self::Custom) -> Self::Inner;
 }

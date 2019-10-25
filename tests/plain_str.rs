@@ -141,6 +141,11 @@ impl validated_slice::OwnedSliceSpec for PlainBoxStrSpec {
     unsafe fn from_inner_unchecked(s: Self::Inner) -> Self::Custom {
         PlainBoxStr(s)
     }
+
+    #[inline]
+    fn into_inner(s: Self::Custom) -> Self::Inner {
+        s.0
+    }
 }
 
 /// ASCII string boxed slice.
@@ -266,6 +271,11 @@ impl validated_slice::OwnedSliceSpec for PlainStringSpec {
     #[inline]
     unsafe fn from_inner_unchecked(s: Self::Inner) -> Self::Custom {
         PlainString(s)
+    }
+
+    #[inline]
+    fn into_inner(s: Self::Custom) -> Self::Inner {
+        s.0
     }
 }
 
