@@ -2,10 +2,22 @@
 
 ## [Unreleased]
 
+* Add support for conversion from custom type into inner type.
+* Add a new trait method `into_inner()` to `OwnedSliceSpec`.
 * Make spec types uninhabited in tests and docs.
+
+### Changed (breaking)
+
+* Add a new trait method `into_inner()` to `OwnedSliceSpec`.
+    + You need to implement it. It would be quite easy, because all you have to do is to extract the
+      inner field from the custom type.
 
 ### Changed (non-breaking)
 
+* Add support for conversion from custom type into inner type.
+    + `From<&{Custom}> for &{Inner}` for borrowed slice.
+    + `From<&mut {Custom}> for &mut {Inner}` for borrowed slice.
+    + `From<{Custom}> for {Inner}` for owned slice.
 * Make spec types uninhabited in tests and docs.
     + Now `enum FooSpec {}` is recommended rather than `struct FooSpec;`, because the former
       prevents accidentally creating spec type value, which is meaningless.
