@@ -157,9 +157,13 @@
 ///     + `{ TryFrom<{Inner}> };`
 /// * `std::default`
 ///     + `{ Default };`
+///         - Note that this redirects to trait impls for `{SliceCustom}`, rather than for `{Inner}`
+///           or `{SliceInner}`.
 /// * `std::fmt`
 ///     + `{ Debug };`
 ///     + `{ Display };`
+///     + Note that these redirects to trait impls for `{SliceCustom}`, rather than for `{Inner}` or
+///       `{SliceInner}`.
 /// * `std::ops`
 ///     + `{ Deref<Target = {SliceCustom}> };`
 ///     + `{ DerefMut<Target = {SliceCustom}> };`
