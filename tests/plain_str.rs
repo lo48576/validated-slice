@@ -57,6 +57,10 @@ validated_slice::impl_std_traits_for_slice! {
     { From<&{Inner}> for &{Custom} };
     // From<&'_ mut str> for &'_ mut PlainStr
     { From<&mut {Inner}> for &mut {Custom} };
+    // From<&'_ PlainStr> for &'_ str
+    { From<&{Custom}> for &{Inner} };
+    // From<&'_ mut PlainStr> for &'_ mut str
+    { From<&mut {Custom}> for &mut {Inner} };
     // From<&'_ PlainStr> for Arc<PlainStr>
     { From<&{Custom}> for Arc<{Custom}> };
     // From<&'_ PlainStr> for Box<PlainStr>
@@ -137,6 +141,11 @@ impl validated_slice::OwnedSliceSpec for PlainBoxStrSpec {
     unsafe fn from_inner_unchecked(s: Self::Inner) -> Self::Custom {
         PlainBoxStr(s)
     }
+
+    #[inline]
+    fn into_inner(s: Self::Custom) -> Self::Inner {
+        s.0
+    }
 }
 
 /// ASCII string boxed slice.
@@ -189,6 +198,8 @@ validated_slice::impl_std_traits_for_owned_slice! {
     { From<&{SliceCustom}> };
     // From<Box<str>> for PlainBoxStr
     { From<{Inner}> };
+    // From<PlainBoxStr> for Box<str>
+    { From<{Custom}> for {Inner} };
     // Default for PlainBoxStr
     // NOTE: Same as `#[derive(Default)]` in this case.
     //{ Default };
@@ -263,6 +274,11 @@ impl validated_slice::OwnedSliceSpec for PlainStringSpec {
     unsafe fn from_inner_unchecked(s: Self::Inner) -> Self::Custom {
         PlainString(s)
     }
+
+    #[inline]
+    fn into_inner(s: Self::Custom) -> Self::Inner {
+        s.0
+    }
 }
 
 /// ASCII string boxed slice.
@@ -313,6 +329,8 @@ validated_slice::impl_std_traits_for_owned_slice! {
     { From<&{SliceInner}> };
     // From<&'_ PlainStr> for PlainString
     { From<&{SliceCustom}> };
+    // From<PlainString> for String
+    { From<{Custom}> for {Inner} };
     // Default for PlainString
     // NOTE: Same as `#[derive(Default)]` in this case.
     //{ Default };
@@ -398,6 +416,8 @@ mod plain_str {
     where
         for<'a> &'a PlainStr: From<&'a str>,
         for<'a> &'a mut PlainStr: From<&'a mut str>,
+        for<'a> &'a str: From<&'a PlainStr>,
+        for<'a> &'a mut str: From<&'a mut PlainStr>,
     {
     }
 
@@ -533,6 +553,7 @@ mod plain_box_str {
         for<'a> PlainBoxStr: From<&'a str>,
         for<'a> PlainBoxStr: From<&'a PlainStr>,
         PlainBoxStr: From<Box<str>>,
+        Box<str>: From<PlainBoxStr>,
     {
     }
 
@@ -679,6 +700,7 @@ mod plain_string {
         for<'a> PlainString: From<&'a str>,
         for<'a> PlainString: From<&'a PlainStr>,
         PlainString: From<String>,
+        String: From<PlainString>,
     {
     }
 

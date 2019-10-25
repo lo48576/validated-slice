@@ -63,6 +63,8 @@ validated_slice::impl_std_traits_for_slice! {
     { AsRef<str> };
     // AsRef<AsciiStr> for AsciiStr
     { AsRef<{Custom}> };
+    // From<&'_ AsciiStr> for &'_ str
+    { From<&{Custom}> for &{Inner} };
     // From<&'_ AsciiStr> for Arc<AsciiStr>
     { From<&{Custom}> for Arc<{Custom}> };
     // From<&'_ AsciiStr> for Box<AsciiStr>
@@ -143,6 +145,11 @@ impl validated_slice::OwnedSliceSpec for AsciiBoxStrSpec {
     unsafe fn from_inner_unchecked(s: Self::Inner) -> Self::Custom {
         AsciiBoxStr(s)
     }
+
+    #[inline]
+    fn into_inner(s: Self::Custom) -> Self::Inner {
+        s.0
+    }
 }
 
 /// ASCII string boxed slice.
@@ -189,6 +196,8 @@ validated_slice::impl_std_traits_for_owned_slice! {
     //{ ToOwned<Owned = {Custom}> for {SliceCustom} };
     // From<&'_ AsciiStr> for AsciiBoxStr
     { From<&{SliceCustom}> };
+    // From<AsciiBoxStr> for Box<str>
+    { From<{Custom}> for {Inner} };
     // TryFrom<&'_ str> for AsciiBoxStr
     { TryFrom<&{SliceInner}> };
     // TryFrom<Box<str>> for AsciiBoxStr
@@ -267,6 +276,11 @@ impl validated_slice::OwnedSliceSpec for AsciiStringSpec {
     unsafe fn from_inner_unchecked(s: Self::Inner) -> Self::Custom {
         AsciiString(s)
     }
+
+    #[inline]
+    fn into_inner(s: Self::Custom) -> Self::Inner {
+        s.0
+    }
 }
 
 /// ASCII string boxed slice.
@@ -313,6 +327,8 @@ validated_slice::impl_std_traits_for_owned_slice! {
     { ToOwned<Owned = {Custom}> for {SliceCustom} };
     // From<&'_ AsciiStr> for AsciiString
     { From<&{SliceCustom}> };
+    // From<AsciiString> for String
+    { From<{Custom}> for {Inner} };
     // TryFrom<&'_ str> for AsciiString
     { TryFrom<&{SliceInner}> };
     // TryFrom<String> for AsciiString
@@ -393,6 +409,13 @@ mod ascii_str {
         for<'a> std::borrow::Cow<'a, str>: PartialEq<AsciiStr>,
         for<'a, 'b> &'b AsciiStr: PartialEq<std::borrow::Cow<'a, str>>,
         for<'a, 'b> std::borrow::Cow<'a, str>: PartialEq<&'b AsciiStr>,
+    {
+    }
+
+    #[test]
+    fn from()
+    where
+        for<'a> &'a str: From<&'a AsciiStr>,
     {
     }
 
@@ -534,6 +557,7 @@ mod ascii_box_str {
     fn from()
     where
         for<'a> AsciiBoxStr: From<&'a AsciiStr>,
+        Box<str>: From<AsciiBoxStr>,
     {
     }
 
@@ -688,6 +712,7 @@ mod ascii_string {
     fn from()
     where
         for<'a> AsciiString: From<&'a AsciiStr>,
+        String: From<AsciiString>,
     {
     }
 
