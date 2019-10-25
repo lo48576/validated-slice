@@ -16,14 +16,17 @@
 
 ### Changed (non-breaking)
 
-* Add support for conversion from custom type into inner type.
-    + `From<&{Custom}> for &{Inner}` for borrowed slice.
-    + `From<&mut {Custom}> for &mut {Inner}` for borrowed slice.
-    + `From<{Custom}> for {Inner}` for owned slice.
 * Make spec types uninhabited in tests and docs.
     + Now `enum FooSpec {}` is recommended rather than `struct FooSpec;`, because the former
       prevents accidentally creating spec type value, which is meaningless.
     + `struct FooSpec(!);` would be better, but `!` (never type) is currently unstable.
+
+### Added
+
+* Add support for conversion from custom type into inner type.
+    + `From<&{Custom}> for &{Inner}` for borrowed slice.
+    + `From<&mut {Custom}> for &mut {Inner}` for borrowed slice.
+    + `From<{Custom}> for {Inner}` for owned slice.
 
 ## [0.1.1]
 
