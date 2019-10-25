@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+* Make spec types uninhabited in tests and docs.
+
+### Changed (non-breaking)
+
+* Make spec types uninhabited in tests and docs.
+    + Now `enum FooSpec {}` is recommended rather than `struct FooSpec;`, because the former
+      prevents accidentally creating spec type value, which is meaningless.
+    + `struct FooSpec(!);` would be better, but `!` (never type) is currently unstable.
+
 ## [0.1.1]
 
 * nostd is supported.
