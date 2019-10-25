@@ -198,6 +198,8 @@ validated_slice::impl_std_traits_for_owned_slice! {
     { From<&{SliceCustom}> };
     // From<Box<str>> for PlainBoxStr
     { From<{Inner}> };
+    // From<PlainBoxStr> for Box<str>
+    { From<{Custom}> for {Inner} };
     // Default for PlainBoxStr
     // NOTE: Same as `#[derive(Default)]` in this case.
     //{ Default };
@@ -327,6 +329,8 @@ validated_slice::impl_std_traits_for_owned_slice! {
     { From<&{SliceInner}> };
     // From<&'_ PlainStr> for PlainString
     { From<&{SliceCustom}> };
+    // From<PlainString> for String
+    { From<{Custom}> for {Inner} };
     // Default for PlainString
     // NOTE: Same as `#[derive(Default)]` in this case.
     //{ Default };
@@ -549,6 +553,7 @@ mod plain_box_str {
         for<'a> PlainBoxStr: From<&'a str>,
         for<'a> PlainBoxStr: From<&'a PlainStr>,
         PlainBoxStr: From<Box<str>>,
+        Box<str>: From<PlainBoxStr>,
     {
     }
 
@@ -695,6 +700,7 @@ mod plain_string {
         for<'a> PlainString: From<&'a str>,
         for<'a> PlainString: From<&'a PlainStr>,
         PlainString: From<String>,
+        String: From<PlainString>,
     {
     }
 

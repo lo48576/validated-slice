@@ -210,6 +210,8 @@ validated_slice::impl_std_traits_for_owned_slice! {
     //{ ToOwned<Owned = {Custom}> for {SliceCustom} };
     // From<&'_ AsciiStr> for AsciiBoxStr
     { From<&{SliceCustom}> };
+    // From<AsciiBoxStr> for Box<str>
+    { From<{Custom}> for {Inner} };
     // TryFrom<&'_ str> for AsciiBoxStr
     { TryFrom<&{SliceInner}> };
     // TryFrom<Box<str>> for AsciiBoxStr
@@ -347,6 +349,8 @@ validated_slice::impl_std_traits_for_owned_slice! {
     { ToOwned<Owned = {Custom}> for {SliceCustom} };
     // From<&'_ AsciiStr> for AsciiString
     { From<&{SliceCustom}> };
+    // From<AsciiString> for String
+    { From<{Custom}> for {Inner} };
     // TryFrom<&'_ str> for AsciiString
     { TryFrom<&{SliceInner}> };
     // TryFrom<String> for AsciiString
@@ -579,6 +583,7 @@ mod ascii_box_str {
     fn from()
     where
         for<'a> AsciiBoxStr: From<&'a AsciiStr>,
+        Box<str>: From<AsciiBoxStr>,
     {
     }
 
@@ -733,6 +738,7 @@ mod ascii_string {
     fn from()
     where
         for<'a> AsciiString: From<&'a AsciiStr>,
+        String: From<AsciiString>,
     {
     }
 
