@@ -18,7 +18,7 @@
 /// pub struct MyStr([u8]);
 ///
 /// /// Spec for `MyStr` type.
-/// struct MyStrSpec;
+/// enum MyStrSpec {}
 ///
 /// impl validated_slice::SliceSpec for MyStrSpec {
 ///     // My `str` type.
@@ -36,7 +36,7 @@
 /// pub struct AsciiString(Vec<u8>);
 ///
 /// /// Spec for `MyString` type.
-/// struct MyStringSpec;
+/// enum MyStringSpec {}
 ///
 /// impl validated_slice::OwnedSliceSpec for MyStringSpec {
 ///     // My `String` type.
@@ -152,13 +152,18 @@
 ///     + `{ From<&{SliceInner}> };`
 ///     + `{ From<&{SliceCustom}> };`
 ///     + `{ From<{Inner}> };`
+///     + `{ From<{Custom}> for {Inner} };`
 ///     + `{ TryFrom<&{SliceInner}> };`
 ///     + `{ TryFrom<{Inner}> };`
 /// * `std::default`
 ///     + `{ Default };`
+///         - Note that this redirects to trait impls for `{SliceCustom}`, rather than for `{Inner}`
+///           or `{SliceInner}`.
 /// * `std::fmt`
 ///     + `{ Debug };`
 ///     + `{ Display };`
+///     + Note that these redirects to trait impls for `{SliceCustom}`, rather than for `{Inner}` or
+///       `{SliceInner}`.
 /// * `std::ops`
 ///     + `{ Deref<Target = {SliceCustom}> };`
 ///     + `{ DerefMut<Target = {SliceCustom}> };`
@@ -458,6 +463,17 @@ macro_rules! impl_std_traits_for_owned_slice {
                     // * Safety condition for `<$spec as $crate::OwnedSliceSpec>` is satisfied.
                     <$spec as $crate::OwnedSliceSpec>::from_inner_unchecked(inner)
                 }
+            }
+        }
+    };
+    (
+        @impl; ({$core:ident, $alloc:ident}, $spec:ty, $custom:ty, $inner:ty, $error:ty,
+            $slice_spec:ty, $slice_custom:ty, $slice_inner:ty, $slice_error:ty);
+        rest=[ From<{Custom}> for {Inner} ];
+    ) => {
+        impl $core::convert::From<$custom> for $inner {
+            fn from(custom: $custom) -> Self {
+                <$spec as $crate::OwnedSliceSpec>::into_inner(custom)
             }
         }
     };

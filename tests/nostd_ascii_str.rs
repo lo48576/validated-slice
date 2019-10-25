@@ -2,7 +2,7 @@
 //!
 //! Types for strings which consists of only ASCII characters.
 
-struct AsciiStrSpec;
+enum AsciiStrSpec {}
 
 impl validated_slice::SliceSpec for AsciiStrSpec {
     type Custom = AsciiStr;
@@ -67,6 +67,8 @@ validated_slice::impl_std_traits_for_slice! {
     { AsRef<str> };
     // AsRef<AsciiStr> for AsciiStr
     { AsRef<{Custom}> };
+    // From<&'_ AsciiStr> for &'_ str
+    { From<&{Custom}> for &{Inner} };
     // TryFrom<&'_ str> for &'_ AsciiStr
     { TryFrom<&{Inner}> for &{Custom} };
     // TryFrom<&'_ mut str> for &'_ mut AsciiStr
@@ -133,6 +135,13 @@ mod ascii_str {
         for<'a> &'a str: PartialEq<AsciiStr>,
         for<'a> &'a AsciiStr: PartialEq<str>,
         for<'a> str: PartialEq<&'a AsciiStr>,
+    {
+    }
+
+    #[test]
+    fn from()
+    where
+        for<'a> &'a str: From<&'a AsciiStr>,
     {
     }
 

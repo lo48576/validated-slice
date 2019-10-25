@@ -35,7 +35,7 @@ mod macros;
 ///     valid_up_to: usize,
 /// }
 ///
-/// struct AsciiStrSpec;
+/// enum AsciiStrSpec {}
 ///
 /// impl validated_slice::SliceSpec for AsciiStrSpec {
 ///     type Custom = AsciiStr;
@@ -121,7 +121,7 @@ pub trait SliceSpec {
 /// #[derive(Default, Debug, Clone, Eq, Ord, Hash)]
 /// pub struct AsciiString(String);
 ///
-/// struct AsciiStringSpec;
+/// enum AsciiStringSpec {}
 ///
 /// impl validated_slice::OwnedSliceSpec for AsciiStringSpec {
 ///     type Custom = AsciiString;
@@ -158,6 +158,11 @@ pub trait SliceSpec {
 ///     #[inline]
 ///     unsafe fn from_inner_unchecked(s: Self::Inner) -> Self::Custom {
 ///         AsciiString(s)
+///     }
+///
+///     #[inline]
+///     fn into_inner(s: Self::Custom) -> Self::Inner {
+///         s.0
 ///     }
 /// }
 /// ```
@@ -196,4 +201,6 @@ pub trait OwnedSliceSpec {
     ///
     /// If any of the condition is not met, this function may cause undefined behavior.
     unsafe fn from_inner_unchecked(s: Self::Inner) -> Self::Custom;
+    /// Returns the inner value with its ownership.
+    fn into_inner(s: Self::Custom) -> Self::Inner;
 }

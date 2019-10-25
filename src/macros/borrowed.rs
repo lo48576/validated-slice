@@ -13,7 +13,7 @@
 /// }
 /// pub struct AsciiStr(str);
 ///
-/// struct AsciiStrSpec;
+/// enum AsciiStrSpec {}
 ///
 /// impl validated_slice::SliceSpec for AsciiStrSpec {
 ///     type Custom = AsciiStr;
@@ -108,7 +108,7 @@ macro_rules! impl_slice_spec_methods {
 /// pub struct MyStr([u8]);
 ///
 /// /// Spec for `MyStr` type.
-/// struct MyStrSpec;
+/// enum MyStrSpec {}
 ///
 /// impl validated_slice::SliceSpec for MyStrSpec {
 ///     // My `str` type.
@@ -206,6 +206,8 @@ macro_rules! impl_slice_spec_methods {
 ///     + `{ AsRef<any_ty> for Cow<{Custom}> };`
 ///     + `{ From<&{Inner}> for &{Custom} };
 ///     + `{ From<&mut {Inner}> for &mut {Custom} };
+///     + `{ From<&{Custom}> for &{Inner} };
+///     + `{ From<&mut {Custom}> for &mut {Inner} };
 ///     + `{ From<&{Custom}> for Arc<{Custom}> };
 ///     + `{ From<&{Custom}> for Box<{Custom}> };
 ///     + `{ From<&{Custom}> for Rc<{Custom}> };
@@ -383,6 +385,26 @@ macro_rules! impl_std_traits_for_slice {
                     // * Safety condition for `<$spec as $crate::SliceSpec>` is satisfied.
                     <$spec as $crate::SliceSpec>::from_inner_unchecked_mut(s)
                 }
+            }
+        }
+    };
+    (
+        @impl; ({$core:ident, $alloc:ident}, $spec:ty, $custom:ty, $inner:ty, $error:ty);
+        rest=[ From<&{Custom}> for &{Inner} ];
+    ) => {
+        impl<'a> $core::convert::From<&'a $custom> for &'a $inner {
+            fn from(s: &'a $custom) -> Self {
+                <$spec as $crate::SliceSpec>::as_inner(s)
+            }
+        }
+    };
+    (
+        @impl; ({$core:ident, $alloc:ident}, $spec:ty, $custom:ty, $inner:ty, $error:ty);
+        rest=[ From<&mut {Custom}> for &mut {Inner} ];
+    ) => {
+        impl<'a> $core::convert::From<&'a mut $custom> for &'a mut $inner {
+            fn from(s: &'a mut $custom) -> Self {
+                <$spec as $crate::SliceSpec>::as_inner_mut(s)
             }
         }
     };

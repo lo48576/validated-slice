@@ -31,7 +31,7 @@ However, primitive types `[T]` and `str` have many trait impls, and custom array
 ## Current status
 
 This crate is at an early stage, and experimental.
-Syntax and features may change breakingly.
+Breaking changes would be introduced for syntax and features.
 
 This crate follows semver, so you can check crate version to know breaking change.
 
