@@ -57,6 +57,10 @@ validated_slice::impl_std_traits_for_slice! {
     { From<&{Inner}> for &{Custom} };
     // From<&'_ mut str> for &'_ mut PlainStr
     { From<&mut {Inner}> for &mut {Custom} };
+    // From<&'_ PlainStr> for &'_ str
+    { From<&{Custom}> for &{Inner} };
+    // From<&'_ mut PlainStr> for &'_ mut str
+    { From<&mut {Custom}> for &mut {Inner} };
     // From<&'_ PlainStr> for Arc<PlainStr>
     { From<&{Custom}> for Arc<{Custom}> };
     // From<&'_ PlainStr> for Box<PlainStr>
@@ -398,6 +402,8 @@ mod plain_str {
     where
         for<'a> &'a PlainStr: From<&'a str>,
         for<'a> &'a mut PlainStr: From<&'a mut str>,
+        for<'a> &'a str: From<&'a PlainStr>,
+        for<'a> &'a mut str: From<&'a mut PlainStr>,
     {
     }
 

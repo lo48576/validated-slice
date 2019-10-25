@@ -63,6 +63,8 @@ validated_slice::impl_std_traits_for_slice! {
     { AsRef<str> };
     // AsRef<AsciiStr> for AsciiStr
     { AsRef<{Custom}> };
+    // From<&'_ AsciiStr> for &'_ str
+    { From<&{Custom}> for &{Inner} };
     // From<&'_ AsciiStr> for Arc<AsciiStr>
     { From<&{Custom}> for Arc<{Custom}> };
     // From<&'_ AsciiStr> for Box<AsciiStr>
@@ -393,6 +395,13 @@ mod ascii_str {
         for<'a> std::borrow::Cow<'a, str>: PartialEq<AsciiStr>,
         for<'a, 'b> &'b AsciiStr: PartialEq<std::borrow::Cow<'a, str>>,
         for<'a, 'b> std::borrow::Cow<'a, str>: PartialEq<&'b AsciiStr>,
+    {
+    }
+
+    #[test]
+    fn from()
+    where
+        for<'a> &'a str: From<&'a AsciiStr>,
     {
     }
 
