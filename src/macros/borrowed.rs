@@ -393,6 +393,7 @@ macro_rules! impl_std_traits_for_slice {
         rest=[ From<&{Custom}> for &{Inner} ];
     ) => {
         impl<'a> $core::convert::From<&'a $custom> for &'a $inner {
+            #[inline]
             fn from(s: &'a $custom) -> Self {
                 <$spec as $crate::SliceSpec>::as_inner(s)
             }
@@ -403,6 +404,7 @@ macro_rules! impl_std_traits_for_slice {
         rest=[ From<&mut {Custom}> for &mut {Inner} ];
     ) => {
         impl<'a> $core::convert::From<&'a mut $custom> for &'a mut $inner {
+            #[inline]
             fn from(s: &'a mut $custom) -> Self {
                 <$spec as $crate::SliceSpec>::as_inner_mut(s)
             }
@@ -569,6 +571,7 @@ macro_rules! impl_std_traits_for_slice {
         where
             $inner: $core::fmt::Debug,
         {
+            #[inline]
             fn fmt(&self, f: &mut $core::fmt::Formatter<'_>) -> $core::fmt::Result {
                 let inner = <$spec as $crate::SliceSpec>::as_inner(self);
                 <$inner as $core::fmt::Debug>::fmt(inner, f)
@@ -585,6 +588,7 @@ macro_rules! impl_std_traits_for_slice {
         where
             $inner: $core::fmt::Display,
         {
+            #[inline]
             fn fmt(&self, f: &mut $core::fmt::Formatter<'_>) -> $core::fmt::Result {
                 let inner = <$spec as $crate::SliceSpec>::as_inner(self);
                 <$inner as $core::fmt::Display>::fmt(inner, f)
