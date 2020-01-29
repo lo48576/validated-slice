@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+* Make more methods `#[inline]`d.
+
+### Changed (non-breaking)
+
+* Make more methods `#[inline]`d.
+
 ## [0.2.0]
 
 * Add support for conversion from custom type into inner type.
