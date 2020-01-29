@@ -567,6 +567,7 @@ macro_rules! impl_std_traits_for_owned_slice {
         where
             $slice_custom: $core::fmt::Debug,
         {
+            #[inline]
             fn fmt(&self, f: &mut $core::fmt::Formatter<'_>) -> $core::fmt::Result {
                 let slice = unsafe {
                     // This is safe only when all of the conditions below are met:
@@ -591,6 +592,7 @@ macro_rules! impl_std_traits_for_owned_slice {
         where
             $slice_custom: $core::fmt::Display,
         {
+            #[inline]
             fn fmt(&self, f: &mut $core::fmt::Formatter<'_>) -> $core::fmt::Result {
                 let slice = unsafe {
                     // This is safe only when all of the conditions below are met:
