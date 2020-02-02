@@ -413,7 +413,7 @@ macro_rules! impl_std_traits_for_slice {
 
     // std::convert::From for smart pointers
     (
-        @impl [smartptr]; ({$core:ident, $alloc:ident}, $spec:ty, $custom:ty, $inner:ty, $error:ty);
+        @impl [smartptr]; ({$core:ident, $alloc:ident}, $spec:ty, $custom:ty, $inner:ty, $error:ty, $mut:ident);
         rest=[ From<&{Custom}> for $($smartptr:ident)::* <{Custom}> ];
     ) => {
         impl<'a> $core::convert::From<&'a $custom> for $($smartptr)::* <$custom>
@@ -432,7 +432,7 @@ macro_rules! impl_std_traits_for_slice {
                     //     + This ensures that the memory layout of `into_raw(buf)` is also valid
                     //       as `$($smartptr)::* <$custom>`.
                     $($smartptr)::* ::<$custom>::from_raw(
-                        $($smartptr)::* ::<$inner>::into_raw(buf) as *mut $custom
+                        $($smartptr)::* ::<$inner>::into_raw(buf) as *$mut $custom
                     )
                 }
             }
@@ -443,7 +443,7 @@ macro_rules! impl_std_traits_for_slice {
         rest=[ From<&{Custom}> for Arc<{Custom}> ];
     ) => {
         $crate::impl_std_traits_for_slice! {
-            @impl [smartptr]; ({$core, $alloc}, $spec, $custom, $inner, $error);
+            @impl [smartptr]; ({$core, $alloc}, $spec, $custom, $inner, $error, const);
             rest=[ From<&{Custom}> for $alloc::sync::Arc <{Custom}> ];
         }
     };
@@ -452,7 +452,7 @@ macro_rules! impl_std_traits_for_slice {
         rest=[ From<&{Custom}> for Box<{Custom}> ];
     ) => {
         $crate::impl_std_traits_for_slice! {
-            @impl [smartptr]; ({$core, $alloc}, $spec, $custom, $inner, $error);
+            @impl [smartptr]; ({$core, $alloc}, $spec, $custom, $inner, $error, mut);
             rest=[ From<&{Custom}> for $alloc::boxed::Box <{Custom}> ];
         }
     };
@@ -461,7 +461,7 @@ macro_rules! impl_std_traits_for_slice {
         rest=[ From<&{Custom}> for Rc<{Custom}> ];
     ) => {
         $crate::impl_std_traits_for_slice! {
-            @impl [smartptr]; ({$core, $alloc}, $spec, $custom, $inner, $error);
+            @impl [smartptr]; ({$core, $alloc}, $spec, $custom, $inner, $error, const);
             rest=[ From<&{Custom}> for $alloc::rc::Rc <{Custom}> ];
         }
     };
