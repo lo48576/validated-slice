@@ -3,10 +3,16 @@
 ## [Unreleased]
 
 * Make more methods `#[inline]`d.
+* Fix a bug that `*const` pointer being converted to `*mut` mistakenly.
 
 ### Changed (non-breaking)
 
 * Make more methods `#[inline]`d.
+
+### Fixed
+
+* Fix a bug that `*const` pointer being converted to `*mut` mistakenly.
+    + This is internal change, and does not change any interface and compatibility.
 
 ## [0.2.0]
 
