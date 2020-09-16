@@ -101,7 +101,7 @@ macro_rules! impl_slice_spec_methods {
 /// Assume you want to implement `str` type manually by yourself.
 /// Then you will have the type definitions below:
 ///
-/// ```ignore
+/// ```
 /// /// My `str` type.
 /// #[repr(transparent)]
 /// #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -119,12 +119,57 @@ macro_rules! impl_slice_spec_methods {
 ///     type Error = MyUtf8Error;
 ///
 ///     /* ... and methods. */
+/// #     fn validate(s: &Self::Inner) -> Result<(), Self::Error> {
+/// #         Ok(())
+/// #     }
+/// #     validated_slice::impl_slice_spec_methods! {
+/// #         field=0;
+/// #         methods=[
+/// #             as_inner,
+/// #             as_inner_mut,
+/// #             from_inner_unchecked,
+/// #             from_inner_unchecked_mut,
+/// #         ];
+/// #     }
 /// }
+/// # struct MyUtf8Error;
 /// ```
 ///
 /// Then you can implement std traits as below:
 ///
-/// ```ignore
+/// ```
+/// # use std as alloc;
+/// # /// My `str` type.
+/// # #[repr(transparent)]
+/// # #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+/// # pub struct MyStr([u8]);
+/// #
+/// # /// Spec for `MyStr` type.
+/// # enum MyStrSpec {}
+/// #
+/// # impl validated_slice::SliceSpec for MyStrSpec {
+/// #     // My `str` type.
+/// #     type Custom = MyStr;
+/// #     // Backend type of `MyStr`.
+/// #     type Inner = [u8];
+/// #     // My `std::str::Utf8Error`.
+/// #     type Error = MyUtf8Error;
+/// #
+/// #     /* ... and methods. */
+/// #     fn validate(s: &Self::Inner) -> Result<(), Self::Error> {
+/// #         Ok(())
+/// #     }
+/// #     validated_slice::impl_slice_spec_methods! {
+/// #         field=0;
+/// #         methods=[
+/// #             as_inner,
+/// #             as_inner_mut,
+/// #             from_inner_unchecked,
+/// #             from_inner_unchecked_mut,
+/// #         ];
+/// #     }
+/// }
+/// # struct MyUtf8Error;
 /// validated_slice::impl_std_traits_for_slice! {
 ///     // `Std` is omissible.
 ///     Std {
@@ -142,7 +187,6 @@ macro_rules! impl_slice_spec_methods {
 ///         error: MyUtf8Error,
 ///     };
 ///     { AsRef<[u8]> };
-///     { AsRef<str> };
 ///     { AsRef<{Custom}> };
 ///     { From<&{Custom}> for Arc<{Custom}> };
 ///     /* ... and more traits you want! */
