@@ -4,6 +4,7 @@
 
 * Make more methods `#[inline]`d.
 * Fix a bug that `*const` pointer being converted to `*mut` mistakenly.
+* Make more doctests runnable.
 
 ### Changed (non-breaking)
 
