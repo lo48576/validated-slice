@@ -116,9 +116,47 @@ pub trait SliceSpec {
 ///
 /// # Examples
 ///
-/// ```ignore
+/// ```
+/// # /// ASCII string slice.
+/// # // `#[repr(transparent)]` or `#[repr(C)]` is required.
+/// # // Without it, generated codes would be unsound.
+/// # #[repr(transparent)]
+/// # #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+/// # pub struct AsciiStr(str);
+/// #
+/// # /// ASCII string validation error.
+/// # #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+/// # pub struct AsciiError {
+/// #     /// Byte position of the first invalid byte.
+/// #     valid_up_to: usize,
+/// # }
+/// #
+/// # enum AsciiStrSpec {}
+/// #
+/// # impl validated_slice::SliceSpec for AsciiStrSpec {
+/// #     type Custom = AsciiStr;
+/// #     type Inner = str;
+/// #     type Error = AsciiError;
+/// #
+/// #     fn validate(s: &Self::Inner) -> Result<(), Self::Error> {
+/// #         match s.as_bytes().iter().position(|b| !b.is_ascii()) {
+/// #             Some(pos) => Err(AsciiError { valid_up_to: pos }),
+/// #             None => Ok(()),
+/// #         }
+/// #     }
+/// #
+/// #     validated_slice::impl_slice_spec_methods! {
+/// #         field=0;
+/// #         methods=[
+/// #             as_inner,
+/// #             as_inner_mut,
+/// #             from_inner_unchecked,
+/// #             from_inner_unchecked_mut,
+/// #         ];
+/// #     }
+/// # }
 /// /// ASCII string boxed slice.
-/// #[derive(Default, Debug, Clone, Eq, Ord, Hash)]
+/// #[derive(Default, Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 /// pub struct AsciiString(String);
 ///
 /// enum AsciiStringSpec {}

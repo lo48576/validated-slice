@@ -101,7 +101,7 @@ macro_rules! impl_slice_spec_methods {
 /// Assume you want to implement `str` type manually by yourself.
 /// Then you will have the type definitions below:
 ///
-/// ```ignore
+/// ```
 /// /// My `str` type.
 /// #[repr(transparent)]
 /// #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -119,12 +119,57 @@ macro_rules! impl_slice_spec_methods {
 ///     type Error = MyUtf8Error;
 ///
 ///     /* ... and methods. */
+/// #     fn validate(s: &Self::Inner) -> Result<(), Self::Error> {
+/// #         Ok(())
+/// #     }
+/// #     validated_slice::impl_slice_spec_methods! {
+/// #         field=0;
+/// #         methods=[
+/// #             as_inner,
+/// #             as_inner_mut,
+/// #             from_inner_unchecked,
+/// #             from_inner_unchecked_mut,
+/// #         ];
+/// #     }
 /// }
+/// # struct MyUtf8Error;
 /// ```
 ///
 /// Then you can implement std traits as below:
 ///
-/// ```ignore
+/// ```
+/// # use std as alloc;
+/// # /// My `str` type.
+/// # #[repr(transparent)]
+/// # #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+/// # pub struct MyStr([u8]);
+/// #
+/// # /// Spec for `MyStr` type.
+/// # enum MyStrSpec {}
+/// #
+/// # impl validated_slice::SliceSpec for MyStrSpec {
+/// #     // My `str` type.
+/// #     type Custom = MyStr;
+/// #     // Backend type of `MyStr`.
+/// #     type Inner = [u8];
+/// #     // My `std::str::Utf8Error`.
+/// #     type Error = MyUtf8Error;
+/// #
+/// #     /* ... and methods. */
+/// #     fn validate(s: &Self::Inner) -> Result<(), Self::Error> {
+/// #         Ok(())
+/// #     }
+/// #     validated_slice::impl_slice_spec_methods! {
+/// #         field=0;
+/// #         methods=[
+/// #             as_inner,
+/// #             as_inner_mut,
+/// #             from_inner_unchecked,
+/// #             from_inner_unchecked_mut,
+/// #         ];
+/// #     }
+/// }
+/// # struct MyUtf8Error;
 /// validated_slice::impl_std_traits_for_slice! {
 ///     // `Std` is omissible.
 ///     Std {
@@ -142,7 +187,6 @@ macro_rules! impl_slice_spec_methods {
 ///         error: MyUtf8Error,
 ///     };
 ///     { AsRef<[u8]> };
-///     { AsRef<str> };
 ///     { AsRef<{Custom}> };
 ///     { From<&{Custom}> for Arc<{Custom}> };
 ///     /* ... and more traits you want! */
@@ -154,20 +198,56 @@ macro_rules! impl_slice_spec_methods {
 /// For `no_std` use, the macro uses custom `core` and `alloc` crate if given.
 /// You can support both nostd and non-nostd environment as below:
 ///
-/// ```ignore
-/// // Use `std` when available.
-/// #[cfg(feature = "std")]
-/// use alloc as std;
-/// // Use external `alloc` crate when nostd.
-/// #[cfg(not(feature = "std"))]
-/// use alloc;
+/// ```
+/// // `extern crate alloc;` can be used when `alloc` or `std` is available.
+/// // You may want to enable this only when `alloc` is available, using attributes
+/// // such as `#[cfg(feature = "alloc")]`.
+/// extern crate alloc;
+/// #
+/// # /// My `str` type.
+/// # #[repr(transparent)]
+/// # #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+/// # pub struct MyStr([u8]);
+/// #
+/// # /// Spec for `MyStr` type.
+/// # enum MyStrSpec {}
+/// #
+/// # impl validated_slice::SliceSpec for MyStrSpec {
+/// #     // My `str` type.
+/// #     type Custom = MyStr;
+/// #     // Backend type of `MyStr`.
+/// #     type Inner = [u8];
+/// #     // My `std::str::Utf8Error`.
+/// #     type Error = MyUtf8Error;
+/// #
+/// #     /* ... and methods. */
+/// #     fn validate(s: &Self::Inner) -> Result<(), Self::Error> {
+/// #         Ok(())
+/// #     }
+/// #     validated_slice::impl_slice_spec_methods! {
+/// #         field=0;
+/// #         methods=[
+/// #             as_inner,
+/// #             as_inner_mut,
+/// #             from_inner_unchecked,
+/// #             from_inner_unchecked_mut,
+/// #         ];
+/// #     }
+/// }
+/// # struct MyUtf8Error;
 ///
 /// validated_slice::impl_std_traits_for_slice! {
 ///     Std {
 ///         core: core,
 ///         alloc: alloc,
 ///     };
-///     Spec { /* ... */ };
+///     Spec {
+///         /* ... */
+/// #         spec: MyStrSpec,
+/// #         custom: MyStr,
+/// #         inner: [u8],
+/// #         error: MyUtf8Error,
+///     };
 ///     /* ... */
 /// }
 /// ```
@@ -639,7 +719,41 @@ macro_rules! impl_std_traits_for_slice {
 ///
 /// ## Examples
 ///
-/// ```ignore
+/// ```
+/// extern crate alloc;
+/// #
+/// # /// ASCII `str` type.
+/// # #[repr(transparent)]
+/// # #[derive(Debug, Eq, Ord, Hash)]
+/// # pub struct AsciiStr(str);
+/// #
+/// # /// Spec for `AsciiStr` type.
+/// # enum AsciiStrSpec {}
+/// #
+/// # impl validated_slice::SliceSpec for AsciiStrSpec {
+/// #     // ASCII `str` type.
+/// #     type Custom = AsciiStr;
+/// #     // Backend type of `AsciiStr`.
+/// #     type Inner = str;
+/// #     // ASCII string validation error.
+/// #     type Error = AsciiError;
+/// #
+/// #     /* ... and methods. */
+/// #     fn validate(s: &Self::Inner) -> Result<(), Self::Error> {
+/// #         Ok(())
+/// #     }
+/// #     validated_slice::impl_slice_spec_methods! {
+/// #         field=0;
+/// #         methods=[
+/// #             as_inner,
+/// #             as_inner_mut,
+/// #             from_inner_unchecked,
+/// #             from_inner_unchecked_mut,
+/// #         ];
+/// #     }
+/// }
+/// # struct AsciiError;
+///
 /// validated_slice::impl_cmp_for_slice! {
 ///     // `Std` is omissible.
 ///     Std {
@@ -661,7 +775,7 @@ macro_rules! impl_std_traits_for_slice {
 ///     { ({Custom}), ({Custom}) };
 ///     { ({Custom}), (&{Custom}), rev };
 ///     // NOTE: `std::borrow::ToOwned for AsciiStr` is required by `Cow`.
-///     { ({Custom}), (Cow<{Custom}>), rev };
+///     //{ ({Custom}), (Cow<{Custom}>), rev };
 ///
 ///     { ({Custom}), ({Inner}), rev };
 ///     { ({Custom}), (&{Inner}), rev };
@@ -674,22 +788,62 @@ macro_rules! impl_std_traits_for_slice {
 /// For `no_std` use, the macro uses custom `core` and `alloc` crate if given.
 /// You can support both nostd and non-nostd environment as below:
 ///
-/// ```ignore
-/// // Use `std` when available.
-/// #[cfg(feature = "std")]
-/// use alloc as std;
-/// // Use external `alloc` crate when nostd.
-/// #[cfg(not(feature = "std"))]
-/// use alloc;
+/// ```
+/// // `extern crate alloc;` can be used when `alloc` or `std` is available.
+/// // You may want to enable this only when `alloc` is available, using attributes
+/// // such as `#[cfg(feature = "alloc")]`.
+/// extern crate alloc;
+/// #
+/// # /// My `str` type.
+/// # #[repr(transparent)]
+/// # #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+/// # pub struct MyStr([u8]);
+/// #
+/// # /// Spec for `MyStr` type.
+/// # enum MyStrSpec {}
+/// #
+/// # impl validated_slice::SliceSpec for MyStrSpec {
+/// #     // My `str` type.
+/// #     type Custom = MyStr;
+/// #     // Backend type of `MyStr`.
+/// #     type Inner = [u8];
+/// #     // My `std::str::Utf8Error`.
+/// #     type Error = MyUtf8Error;
+/// #
+/// #     /* ... and methods. */
+/// #     fn validate(s: &Self::Inner) -> Result<(), Self::Error> {
+/// #         Ok(())
+/// #     }
+/// #     validated_slice::impl_slice_spec_methods! {
+/// #         field=0;
+/// #         methods=[
+/// #             as_inner,
+/// #             as_inner_mut,
+/// #             from_inner_unchecked,
+/// #             from_inner_unchecked_mut,
+/// #         ];
+/// #     }
+/// }
+/// # struct MyUtf8Error;
 ///
 /// validated_slice::impl_cmp_for_slice! {
 ///     Std {
 ///         core: core,
 ///         alloc: alloc,
-///     }
-///     Spec { /* ... */ };
-///     Cmp { /* ... */ };
+///     };
+///     Spec {
+///         /* ... */
+/// #         spec: MyStrSpec,
+/// #         custom: MyStr,
+/// #         inner: [u8],
+/// #         base: Inner,
+///     };
+///     Cmp {
+///         /* ... */
+/// #         PartialEq
+///     };
 ///     /* ... */
+/// #     { ({Custom}), (&{Custom}), rev };
 /// }
 /// ```
 ///
